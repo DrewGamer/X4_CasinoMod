@@ -64,7 +64,6 @@
           <set_value name="player.entity.$casino_data.$TotalWon" exact="0"/>
         </do_if>
 
-        <!-- Calculate player balance in Credits -->
         <set_value name="$balanceCr" exact="player.money / 100"/>
         <set_value name="$data" exact="player.entity.$casino_data"/>
 
@@ -139,7 +138,7 @@
           param="table[
             $col = 1,
             $id = 'btn_bet_1000',
-            $text = 'Bet: 1,000 Cr',
+            $text = table[$text = 'Bet: 1,000 Cr', $halign = 'center'],
             $onClick = Handle_Casino_Action,
           ]"/>
         <signal_cue_instantly
@@ -147,7 +146,7 @@
           param="table[
             $col = 2,
             $id = 'btn_bet_5000',
-            $text = 'Bet: 5,000 Cr',
+            $text = table[$text = 'Bet: 5,000 Cr', $halign = 'center'],
             $onClick = Handle_Casino_Action,
           ]"/>
         <signal_cue_instantly
@@ -155,7 +154,7 @@
           param="table[
             $col = 3,
             $id = 'btn_bet_25000',
-            $text = 'Bet: 25,000 Cr',
+            $text = table[$text = 'Bet: 25,000 Cr', $halign = 'center'],
             $onClick = Handle_Casino_Action,
           ]"/>
 
@@ -168,7 +167,7 @@
           param="table[
             $col = 1,
             $id = 'btn_bet_100000',
-            $text = 'Bet: 100,000 Cr',
+            $text = table[$text = 'Bet: 100,000 Cr', $halign = 'center'],
             $onClick = Handle_Casino_Action,
           ]"/>
         <signal_cue_instantly
@@ -176,7 +175,11 @@
           param="table[
             $col = 2,
             $id = 'btn_spin',
-            $text = '★ ★ ★  SPIN!  ★ ★ ★',
+            $text = table[
+              $text   = '★ ★ ★  SPIN!  ★ ★ ★',
+              $color  = 'Color.chatuser_5',
+              $halign = 'center',
+            ],
             $onClick = Handle_Casino_Action,
           ]"/>
         <signal_cue_instantly
@@ -184,7 +187,7 @@
           param="table[
             $col = 3,
             $id = 'btn_payout_info',
-            $text = 'Paytable Info',
+            $text = table[$text = 'Paytable Info', $halign = 'center'],
             $onClick = Handle_Casino_Action,
           ]"/>
       </actions>
