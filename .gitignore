@@ -1,6 +1,7 @@
 # Local tools & virtual environment
 .venv/
 .tools/
+dependencies/
 *.pyc
 __pycache__/
 

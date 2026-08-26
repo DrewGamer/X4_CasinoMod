@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<content id="x4_casino_mod" name="X4 Casino Mod" version="010" sync="false"
+<content id="x4_casino_mod" name="X4 Casino Mod" version="010" date="2026-08-26" save="false" sync="false"
          description="Adds interactive casino gambling games (Blackjack, Roulette, Slots) to station lounges and bars."
          author="DrewGamer">
     <dependency id="kuerteeUIExtensionsAndHUD" optional="false" name="UI Extensions and HUD"/>
