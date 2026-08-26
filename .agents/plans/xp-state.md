@@ -3,7 +3,7 @@
 ## 1. Project Context
 **Project Name:** X4 Foundations Casino Mod (`x4_casino_mod`)
 **Project Type:** Game Mod
-**Current Stage:** Phase 2 - XP Development Loop (Environment Setup & Slots PoC)
+**Current Stage:** Phase 3 - Continuous Release Packaging
 **Active Branch:** `feat/scaffolding-and-slots-poc`
 **Primary Tech Stack:**
 - **Game Engine Target:** X4: Foundations (Egosoft)
@@ -13,7 +13,7 @@
 - **Automation:** PowerShell build & test scripts (`scripts/test.ps1`, `scripts/build.ps1`, `scripts/deploy_local.ps1`)
 
 ## 2. Active Goal & Constraints (B8 Attention Anchor)
-**Current Objective:** Implement environment setup, tooling scaffolding, and 3-reel slots TDD PoC (Tasks T1 through T6) on feature branch `feat/scaffolding-and-slots-poc`.
+**Current Objective:** Package and upload continuous release build (`dist/x4_casino_mod.zip`) to GitHub tag `continuous-build` for Phase 4 human manual checkpoint.
 **Hard Constraints:**
 - MUST pass human checkpoint for architecture approval before starting T1. (APPROVED)
 - MUST pass human checkpoint for branch selection and PR reviews.
@@ -59,19 +59,19 @@ Three-tier decoupled mod architecture centered around the vanilla **Casino** and
 | ID | Title | Status | Assigned Persona | Dependencies |
 |---|---|---|---|---|
 | T0 | Environment Setup & Tooling Scaffolding Plan (XP Aligned) | done | xp-architect | - |
-| T1 | Workflow Sync, Security Gate, Git Init & Workspace Layout (`.gitignore`, `CHANGELOG.md`, `.luacheckrc`, `.vscode`) | pending | xp-developer | T0 |
-| T2 | Local Python venv & XML Validator Pipeline Setup (`lxml`, `xmlschema`, `scripts/validate_xml.py`) | pending | xp-developer | T1 |
-| T3 | Local Lua Runtime, Linter, & Headless TDD Test Harness Setup (`luaunit`, `luacheck`, `scripts/test.ps1`) | pending | xp-developer | T1 |
-| T4 | Egosoft XSD Schemas & Mod Dependency Extraction (Nexus 552 & SirNukes APIs in `dependencies/`) | pending | xp-developer | T2, T3 |
-| T5 | Build & Local Deployment Automation Scripts (`scripts/build.ps1`, `scripts/deploy_local.ps1`) | pending | xp-developer | T4 |
-| T6 | Feature: 3-Reel Slots Core Engine TDD (Teladi Profit Spinner - PoC) | pending | xp-developer | T3, T5 |
+| T1 | Workflow Sync, Security Gate, Git Init & Workspace Layout (`.gitignore`, `CHANGELOG.md`, `.luacheckrc`, `.vscode`) | done | xp-developer | T0 |
+| T2 | Local Python venv & XML Validator Pipeline Setup (`lxml`, `xmlschema`, `scripts/validate_xml.py`) | done | xp-developer | T1 |
+| T3 | Local Lua Runtime, Linter, & Headless TDD Test Harness Setup (`luaunit`, `luacheck`, `scripts/test.ps1`) | done | xp-developer | T1 |
+| T4 | Egosoft XSD Schemas & Mod Dependency Extraction (Nexus 552 & SirNukes APIs in `dependencies/`) | done | xp-developer | T2, T3 |
+| T5 | Build & Local Deployment Automation Scripts (`scripts/build.ps1`, `scripts/deploy_local.ps1`) | done | xp-developer | T4 |
+| T6 | Feature: 3-Reel Slots Core Engine TDD (Teladi Profit Spinner - PoC) | done | xp-developer | T3, T5 |
 | T7 | Feature: SirNukes Simple Menu Adapter for 3-Reel Slots UI (PoC) | pending | xp-developer | T6 |
 | T8 | Feature: Station Casino & Bar Physical 'F' Interaction Cues (`md/CasinoStationCues.xml`) | pending | xp-developer | T7 |
 | T9 | Feature: Card Deck Core & Blackjack TDD Implementation (Iteration 2) | pending | xp-developer | T6, T8 |
 
 ## 5. Sub-Agent Coordination
 - **Phase 0 & 1**: Plan updated by `xp-architect` and submitted for human checkpoint review.
-- **Phase 2 Execution**: Once approved, `xp-developer` will be dispatched to execute tasks `T1` through `T6` sequentially on feature branch `feat/scaffolding-and-slots-poc`.
+- **Phase 2 Execution**: `xp-developer` executed tasks `T1` through `T6` sequentially on feature branch `feat/scaffolding-and-slots-poc`.
 - **Phase 3 Continuous Packaging**: `release-packager` will bundle `dist/x4_casino_mod.zip` and publish to GitHub tag `continuous-build`.
 - **Phase 4 Manual Checkpoint**: Human manual verification of test suite & built artifact.
 - **Phase 5 Release Gate**: PR creation via `gh pr create`, merge to `main`, `CHANGELOG.md` stamp, and SemVer release creation (`v0.1.0-beta`).
@@ -80,8 +80,8 @@ Three-tier decoupled mod architecture centered around the vanilla **Casino** and
 - [x] Environment Scaffolding Plan Drafted & XP-Aligned
 - [x] POC Game Selected: 3-Reel Slot Machine ("Teladi Profit Spinner")
 - [x] Phase 1 Architecture Approval (Human Checkpoint)
-- [ ] Environment Setup Implemented & Verified (T1–T5)
-- [ ] 3-Reel Slots TDD Core Complete (T6)
+- [x] Environment Setup Implemented & Verified (T1–T5)
+- [x] 3-Reel Slots TDD Core Complete (T6)
 - [ ] Phase 3 Continuous Build Packaged & Uploaded (`dist/x4_casino_mod.zip`)
 - [ ] Phase 4 Manual Verification Passed
 - [ ] Phase 5 PR Merged & Tagged (`v0.1.0-beta`)
