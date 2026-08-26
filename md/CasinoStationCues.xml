@@ -58,86 +58,78 @@
               <set_value name="CasinoData.$TotalWon" exact="0"/>
             </do_if>
 
-            <!-- Format player balance -->
-            <set_value name="$balanceCr" exact="player.money / 100"/>
-
             <!-- Row 1: Header / Balance -->
-            <signal_cue_instantly cue="md.Simple_Menu_API.Add_Row"/>
+            <signal_cue_instantly
+              cue="md.Simple_Menu_API.Add_Row"
+              param="table[$selectable = false]"/>
             <signal_cue_instantly
               cue="md.Simple_Menu_API.Make_Text"
               param="table[
                 $col = 1,
                 $colSpan = 3,
-                $text = table[
-                  $text   = 'TELADI PROFIT SPINNER  |  Balance: ' + $balanceCr + ' Cr  |  Current Bet: ' + CasinoData.$CurrentBet + ' Cr',
-                  $color  = 'Color.text_accent',
-                  $halign = 'center',
-                ],
+                $text = 'TELADI PROFIT SPINNER  |  Balance: ' + (player.money / 100) + ' Cr  |  Current Bet: ' + CasinoData.$CurrentBet + ' Cr',
+                $halign = 'center',
                 $cellBGColor = 'Color.frame_background_semitransparent',
               ]"/>
 
             <!-- Row 2: 3-Reel Display Boxes -->
-            <signal_cue_instantly cue="md.Simple_Menu_API.Add_Row"/>
             <signal_cue_instantly
-              cue="md.Simple_Menu_API.Make_Text"
+              cue="md.Simple_Menu_API.Add_Row"
+              param="table[$selectable = false]"/>
+            <signal_cue_instantly
+              cue="md.Simple_Menu_API.Make_BoxText"
               param="table[
                 $col = 1,
-                $text = table[
-                  $text   = CasinoData.$Reel1,
-                  $color  = 'Color.text_normal',
-                  $halign = 'center',
-                  $fontsize = 16,
-                ],
-                $cellBGColor = 'Color.row_background_unselectable',
+                $id = 'box_reel1',
+                $text = CasinoData.$Reel1,
+                $halign = 'center',
+                $fontsize = 16,
               ]"/>
             <signal_cue_instantly
-              cue="md.Simple_Menu_API.Make_Text"
+              cue="md.Simple_Menu_API.Make_BoxText"
               param="table[
                 $col = 2,
-                $text = table[
-                  $text   = CasinoData.$Reel2,
-                  $color  = 'Color.text_normal',
-                  $halign = 'center',
-                  $fontsize = 16,
-                ],
-                $cellBGColor = 'Color.row_background_unselectable',
+                $id = 'box_reel2',
+                $text = CasinoData.$Reel2,
+                $halign = 'center',
+                $fontsize = 16,
               ]"/>
             <signal_cue_instantly
-              cue="md.Simple_Menu_API.Make_Text"
+              cue="md.Simple_Menu_API.Make_BoxText"
               param="table[
                 $col = 3,
-                $text = table[
-                  $text   = CasinoData.$Reel3,
-                  $color  = 'Color.text_normal',
-                  $halign = 'center',
-                  $fontsize = 16,
-                ],
-                $cellBGColor = 'Color.row_background_unselectable',
+                $id = 'box_reel3',
+                $text = CasinoData.$Reel3,
+                $halign = 'center',
+                $fontsize = 16,
               ]"/>
 
             <!-- Row 3: Result and Payout Message -->
-            <signal_cue_instantly cue="md.Simple_Menu_API.Add_Row"/>
+            <signal_cue_instantly
+              cue="md.Simple_Menu_API.Add_Row"
+              param="table[$selectable = false]"/>
             <signal_cue_instantly
               cue="md.Simple_Menu_API.Make_Text"
               param="table[
                 $col = 1,
                 $colSpan = 3,
-                $text = table[
-                  $text   = CasinoData.$ResultBanner,
-                  $color  = 'Color.chatuser_5',
-                  $halign = 'center',
-                ],
+                $id = 'txt_banner',
+                $text = CasinoData.$ResultBanner,
+                $halign = 'center',
+                $color = 'Color.chatuser_5',
                 $cellBGColor = 'Color.frame_background_semitransparent',
               ]"/>
 
             <!-- Row 4: Bet Amount Buttons -->
-            <signal_cue_instantly cue="md.Simple_Menu_API.Add_Row"/>
+            <signal_cue_instantly
+              cue="md.Simple_Menu_API.Add_Row"
+              param="table[]"/>
             <signal_cue_instantly
               cue="md.Simple_Menu_API.Make_Button"
               param="table[
                 $col = 1,
                 $id = 'btn_bet_1000',
-                $text = table[$text = 'Bet: 1,000 Cr', $halign = 'center'],
+                $text = 'Bet: 1,000 Cr',
                 $onClick = Handle_Casino_Action,
               ]"/>
             <signal_cue_instantly
@@ -145,7 +137,7 @@
               param="table[
                 $col = 2,
                 $id = 'btn_bet_5000',
-                $text = table[$text = 'Bet: 5,000 Cr', $halign = 'center'],
+                $text = 'Bet: 5,000 Cr',
                 $onClick = Handle_Casino_Action,
               ]"/>
             <signal_cue_instantly
@@ -153,18 +145,20 @@
               param="table[
                 $col = 3,
                 $id = 'btn_bet_25000',
-                $text = table[$text = 'Bet: 25,000 Cr', $halign = 'center'],
+                $text = 'Bet: 25,000 Cr',
                 $onClick = Handle_Casino_Action,
               ]"/>
 
             <!-- Row 5: Spin Button & High Roller -->
-            <signal_cue_instantly cue="md.Simple_Menu_API.Add_Row"/>
+            <signal_cue_instantly
+              cue="md.Simple_Menu_API.Add_Row"
+              param="table[]"/>
             <signal_cue_instantly
               cue="md.Simple_Menu_API.Make_Button"
               param="table[
                 $col = 1,
                 $id = 'btn_bet_100000',
-                $text = table[$text = 'Bet: 100,000 Cr', $halign = 'center'],
+                $text = 'Bet: 100,000 Cr',
                 $onClick = Handle_Casino_Action,
               ]"/>
             <signal_cue_instantly
@@ -172,11 +166,7 @@
               param="table[
                 $col = 2,
                 $id = 'btn_spin',
-                $text = table[
-                  $text   = '★ ★ ★  SPIN!  ★ ★ ★',
-                  $color  = 'Color.chatuser_5',
-                  $halign = 'center',
-                ],
+                $text = '★ ★ ★  SPIN!  ★ ★ ★',
                 $onClick = Handle_Casino_Action,
               ]"/>
             <signal_cue_instantly
@@ -184,7 +174,7 @@
               param="table[
                 $col = 3,
                 $id = 'btn_payout_info',
-                $text = table[$text = 'Paytable Info', $halign = 'center'],
+                $text = 'Paytable Info',
                 $onClick = Handle_Casino_Action,
               ]"/>
           </actions>
