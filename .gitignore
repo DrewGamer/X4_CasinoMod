@@ -1,0 +1,22 @@
+# Local tools & virtual environment
+.venv/
+.tools/
+*.pyc
+__pycache__/
+
+# Build & distribution artifacts
+dist/
+build/
+*.cat
+*.dat
+*.zip
+
+# Local user configuration & CLI caches
+config.local.json
+local.properties
+.antigravitycli/
+
+# IDE and OS
+.DS_Store
+Thumbs.db
+.idea/

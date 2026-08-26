@@ -1,0 +1,18 @@
+{
+    "files.eol": "\n",
+    "xml.validation.enabled": true,
+    "xml.fileAssociations": [
+        {
+            "pattern": "md/*.xml",
+            "systemId": "schemas/md.xsd"
+        },
+        {
+            "pattern": "content.xml",
+            "systemId": "schemas/content.xsd"
+        },
+        {
+            "pattern": "t/*.xml",
+            "systemId": "schemas/libraries.xsd"
+        }
+    ]
+}
