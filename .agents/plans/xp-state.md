@@ -3,7 +3,7 @@
 ## 1. Project Context
 **Project Name:** X4 Foundations Casino Mod (`x4_casino_mod`)
 **Project Type:** Game Mod
-**Current Stage:** Phase 3 - Continuous Release Packaging
+**Current Stage:** Phase 4 - Manual Testing Loop (Scaffolding & Slots PoC)
 **Active Branch:** `feat/scaffolding-and-slots-poc`
 **Primary Tech Stack:**
 - **Game Engine Target:** X4: Foundations (Egosoft)
@@ -13,7 +13,7 @@
 - **Automation:** PowerShell build & test scripts (`scripts/test.ps1`, `scripts/build.ps1`, `scripts/deploy_local.ps1`)
 
 ## 2. Active Goal & Constraints (B8 Attention Anchor)
-**Current Objective:** Package and upload continuous release build (`dist/x4_casino_mod.zip`) to GitHub tag `continuous-build` for Phase 4 human manual checkpoint.
+**Current Objective:** Human manual verification of test suite (`scripts/test.ps1`) and continuous build artifact (`dist/x4_casino_mod.zip`) before Phase 5 PR creation and release tagging.
 **Hard Constraints:**
 - MUST pass human checkpoint for architecture approval before starting T1. (APPROVED)
 - MUST pass human checkpoint for branch selection and PR reviews.
@@ -82,7 +82,7 @@ Three-tier decoupled mod architecture centered around the vanilla **Casino** and
 - [x] Phase 1 Architecture Approval (Human Checkpoint)
 - [x] Environment Setup Implemented & Verified (T1–T5)
 - [x] 3-Reel Slots TDD Core Complete (T6)
-- [ ] Phase 3 Continuous Build Packaged & Uploaded (`dist/x4_casino_mod.zip`)
+- [x] Phase 3 Continuous Build Packaged & Uploaded (`dist/x4_casino_mod.zip`)
 - [ ] Phase 4 Manual Verification Passed
 - [ ] Phase 5 PR Merged & Tagged (`v0.1.0-beta`)
 
