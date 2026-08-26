@@ -1,5 +1,4 @@
 {
     "x4_install_path": "C:/Program Files (x86)/Steam/steamapps/common/X4 Foundations",
-    "x4_user_extensions_path": "C:/Users/USERNAME/Documents/Egosoft/X4/USERID/extensions",
     "deploy_mode": "symlink"
 }

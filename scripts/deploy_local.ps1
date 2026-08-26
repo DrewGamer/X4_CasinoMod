@@ -40,13 +40,13 @@ $config = Get-Content $configFile -Raw | ConvertFrom-Json
 $deployMode = if ($config.deploy_mode) { $config.deploy_mode } else { "copy" }
 $targetPath = ""
 
-if ($config.x4_user_extensions_path -and (Test-Path (Split-Path $config.x4_user_extensions_path -Parent))) {
-    $targetPath = Join-Path $config.x4_user_extensions_path "x4_casino_mod"
-} elseif ($config.x4_install_path -and (Test-Path $config.x4_install_path)) {
+if ($config.x4_install_path -and (Test-Path $config.x4_install_path)) {
     $targetPath = Join-Path $config.x4_install_path "extensions\x4_casino_mod"
+} elseif ($config.x4_user_extensions_path -and (Test-Path (Split-Path $config.x4_user_extensions_path -Parent))) {
+    $targetPath = Join-Path $config.x4_user_extensions_path "x4_casino_mod"
 } else {
-    Write-Host "[!] Error: No valid X4 installation or extensions path found in config.local.json." -ForegroundColor Red
-    Write-Host "    Edit config.local.json with your actual X4 game directory." -ForegroundColor Yellow
+    Write-Host "[!] Error: No valid X4 installation path found in config.local.json." -ForegroundColor Red
+    Write-Host "    Edit config.local.json with your actual X4 game directory (e.g. Steam/steamapps/common/X4 Foundations)." -ForegroundColor Yellow
     exit 1
 }
 
