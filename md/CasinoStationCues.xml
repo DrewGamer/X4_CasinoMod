@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mdscript name="CasinoStationCues" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../schemas/md.xsd">
+  <cues>
+    <!-- Register with SirNukes Simple Menu Options Menu on game load / reload -->
+    <cue name="RegisterCasinoOptions" instantiate="false">
+      <conditions>
+        <check_any>
+          <event_cue_signalled cue="md.Setup.GameStart" />
+          <event_game_loaded />
+        </check_any>
+      </conditions>
+      <actions>
+        <!-- Register quick-access slot machine button in Extension Options -->
+        <signal_cue_instantly cue="md.Simple_Menu_Options.Register_Option"
+          param="table[
+            $id = 'x4_casino_play_slots',
+            $name = '{998811, 100}',
+            $mouseover = '{998811, 101}',
+            $type = 'button',
+            $callback = OpenSlotsMenuFromOptions
+          ]" />
+      </actions>
+    </cue>
+
+    <!-- Callback cue when player clicks button in Extension Options or interacts in station -->
+    <cue name="OpenSlotsMenuFromOptions" instantiate="true">
+      <conditions>
+        <event_cue_signalled />
+      </conditions>
+      <actions>
+        <raise_lua_event name="'X4Casino_OpenSlots'" param="player.money" />
+      </actions>
+    </cue>
+  </cues>
+</mdscript>
