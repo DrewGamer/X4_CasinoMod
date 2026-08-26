@@ -17,14 +17,12 @@ Write-Host "============================================================" -Foreg
 Write-Host "X4 Casino Mod - Local Game Deployment" -ForegroundColor Cyan
 Write-Host "============================================================" -ForegroundColor Cyan
 
-# 1. Check if dist exists, build if missing
-if (-not (Test-Path $modDistDir)) {
-    Write-Host "[*] Distribution folder not found. Running build.ps1 first..." -ForegroundColor Yellow
-    & powershell -ExecutionPolicy Bypass -File (Join-Path $scriptDir "build.ps1")
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "[-] Build failed. Deployment aborted." -ForegroundColor Red
-        exit 1
-    }
+# 1. Build latest assets
+Write-Host "[*] Building latest distribution assets..." -ForegroundColor Yellow
+& powershell -ExecutionPolicy Bypass -File (Join-Path $scriptDir "build.ps1")
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "[-] Build failed. Deployment aborted." -ForegroundColor Red
+    exit 1
 }
 
 # 2. Load Local Config
