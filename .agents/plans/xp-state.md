@@ -65,8 +65,8 @@ Three-tier decoupled mod architecture centered around the vanilla **Casino** and
 | T4 | Egosoft XSD Schemas & Mod Dependency Extraction (Nexus 552 & SirNukes APIs in `dependencies/`) | done | xp-developer | T2, T3 |
 | T5 | Build & Local Deployment Automation Scripts (`scripts/build.ps1`, `scripts/deploy_local.ps1`) | done | xp-developer | T4 |
 | T6 | Feature: 3-Reel Slots Core Engine TDD (Teladi Profit Spinner - PoC) | done | xp-developer | T3, T5 |
-| T7 | Feature: SirNukes Simple Menu Adapter for 3-Reel Slots UI (PoC) | pending | xp-developer | T6 |
-| T8 | Feature: Station Casino & Bar Physical 'F' Interaction Cues (`md/CasinoStationCues.xml`) | pending | xp-developer | T7 |
+| T7 | Feature: SirNukes Simple Menu Adapter for 3-Reel Slots UI (PoC) | done | xp-developer | T6 |
+| T8 | Feature: Station Casino & Bar Physical 'F' Interaction Cues (`md/CasinoStationCues.xml`) | done | xp-developer | T7 |
 | T9 | Feature: Card Deck Core & Blackjack TDD Implementation (Iteration 2) | pending | xp-developer | T6, T8 |
 
 ## 5. Sub-Agent Coordination
