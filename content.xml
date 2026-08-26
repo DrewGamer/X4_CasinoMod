@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<content id="x4_casino_mod" name="X4 Casino Mod" version="010" sync="false"
+         description="Adds interactive casino gambling games (Blackjack, Roulette, Slots) to station lounges and bars."
+         author="DrewGamer">
+    <dependency id="kuertee_ui_extensions" optional="false" name="UI Extensions and HUD"/>
+    <dependency id="sirnukes_mod_support_apis" optional="true" name="SirNukes Mod Support APIs"/>
+</content>
