@@ -2,356 +2,365 @@
 <mdscript name="CasinoStationCues" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <cues>
     <!--
-      Parent cue with namespace="this" for scoping all casino callbacks
+      Global State Setup on Game Start / Load
     -->
-    <cue name="Casino_Manager" namespace="this">
+    <cue name="Init_Casino_State">
+      <conditions>
+        <check_any>
+          <event_cue_signalled cue="md.Setup.GameStart"/>
+          <event_game_loaded/>
+        </check_any>
+      </conditions>
       <actions>
-        <!-- Initialize persistent casino data table -->
-        <set_value name="CasinoData" exact="table[]"/>
-        <set_value name="CasinoData.$CurrentBet" exact="5000"/>
-        <set_value name="CasinoData.$Reel1" exact="'[ PROFIT! ]'"/>
-        <set_value name="CasinoData.$Reel2" exact="'[ PROFIT! ]'"/>
-        <set_value name="CasinoData.$Reel3" exact="'[ PROFIT! ]'"/>
-        <set_value name="CasinoData.$ResultBanner" exact="'Match 3 symbols for profitsss!'"/>
-        <set_value name="CasinoData.$TotalSpins" exact="0"/>
-        <set_value name="CasinoData.$TotalWon" exact="0"/>
+        <do_if value="not player.entity.$casino_data?">
+          <set_value name="player.entity.$casino_data" exact="table[]"/>
+          <set_value name="player.entity.$casino_data.$CurrentBet" exact="5000"/>
+          <set_value name="player.entity.$casino_data.$Reel1" exact="'[ PROFIT! ]'"/>
+          <set_value name="player.entity.$casino_data.$Reel2" exact="'[ PROFIT! ]'"/>
+          <set_value name="player.entity.$casino_data.$Reel3" exact="'[ PROFIT! ]'"/>
+          <set_value name="player.entity.$casino_data.$ResultBanner" exact="'Match 3 symbols for profitsss!'"/>
+          <set_value name="player.entity.$casino_data.$TotalSpins" exact="0"/>
+          <set_value name="player.entity.$casino_data.$TotalWon" exact="0"/>
+        </do_if>
       </actions>
-      <cues>
+    </cue>
 
-        <!--
-          Register the Slot Machine in SirNukes Extension Options Menu
-        -->
-        <cue name="Register_Options_Menu" instantiate="true" namespace="this">
-          <conditions>
-            <event_cue_signalled cue="md.Simple_Menu_API.Reloaded"/>
-          </conditions>
-          <actions>
-            <signal_cue_instantly
-              cue="md.Simple_Menu_API.Register_Options_Menu"
-              param="table[
-                $id       = 'x4_casino_slots_menu',
-                $columns  = 3, 
-                $title    = 'Teladi Profit Spinner',
-                $category = 'X4 Casino',
-                $onOpen   = Build_Slots_Menu,
-              ]"/>
-          </actions>
-        </cue>
+    <!--
+      Register the Slot Machine in SirNukes Extension Options Menu
+    -->
+    <cue name="Register_Options_Menu" instantiate="true" namespace="this">
+      <conditions>
+        <event_cue_signalled cue="md.Simple_Menu_API.Reloaded"/>
+      </conditions>
+      <actions>
+        <signal_cue_instantly
+          cue="md.Simple_Menu_API.Register_Options_Menu"
+          param="table[
+            $id       = 'x4_casino_slots_menu',
+            $columns  = 3, 
+            $title    = 'Teladi Profit Spinner',
+            $onOpen   = Build_Slots_Menu,
+          ]"/>
+      </actions>
+    </cue>
 
-        <!--
-          Build the 2D Slot Machine UI Table
-        -->
-        <cue name="Build_Slots_Menu" instantiate="true" namespace="this">
-          <conditions>
-            <event_cue_signalled/>
-          </conditions>
-          <actions>
-            <!-- Ensure state exists -->
-            <do_if value="not CasinoData?">
-              <set_value name="CasinoData" exact="table[]"/>
-              <set_value name="CasinoData.$CurrentBet" exact="5000"/>
-              <set_value name="CasinoData.$Reel1" exact="'[ --- ]'"/>
-              <set_value name="CasinoData.$Reel2" exact="'[ --- ]'"/>
-              <set_value name="CasinoData.$Reel3" exact="'[ --- ]'"/>
-              <set_value name="CasinoData.$ResultBanner" exact="'Select bet and press SPIN to play!'"/>
-              <set_value name="CasinoData.$TotalSpins" exact="0"/>
-              <set_value name="CasinoData.$TotalWon" exact="0"/>
+    <!--
+      Build the 2D Slot Machine UI Table
+    -->
+    <cue name="Build_Slots_Menu" instantiate="true" namespace="this">
+      <conditions>
+        <event_cue_signalled/>
+      </conditions>
+      <actions>
+        <!-- Ensure persistent state table exists on player -->
+        <do_if value="not player.entity.$casino_data?">
+          <set_value name="player.entity.$casino_data" exact="table[]"/>
+          <set_value name="player.entity.$casino_data.$CurrentBet" exact="5000"/>
+          <set_value name="player.entity.$casino_data.$Reel1" exact="'[ --- ]'"/>
+          <set_value name="player.entity.$casino_data.$Reel2" exact="'[ --- ]'"/>
+          <set_value name="player.entity.$casino_data.$Reel3" exact="'[ --- ]'"/>
+          <set_value name="player.entity.$casino_data.$ResultBanner" exact="'Select bet and press SPIN to play!'"/>
+          <set_value name="player.entity.$casino_data.$TotalSpins" exact="0"/>
+          <set_value name="player.entity.$casino_data.$TotalWon" exact="0"/>
+        </do_if>
+
+        <!-- Calculate player balance in Credits -->
+        <set_value name="$balanceCr" exact="player.money / 100"/>
+        <set_value name="$data" exact="player.entity.$casino_data"/>
+
+        <!-- Row 1: Header / Balance -->
+        <signal_cue_instantly
+          cue="md.Simple_Menu_API.Add_Row"
+          param="table[$selectable = false]"/>
+        <signal_cue_instantly
+          cue="md.Simple_Menu_API.Make_Text"
+          param="table[
+            $col = 1,
+            $colSpan = 3,
+            $text = 'TELADI PROFIT SPINNER  |  Balance: ' + $balanceCr + ' Cr  |  Current Bet: ' + $data.$CurrentBet + ' Cr',
+            $halign = 'center',
+            $cellBGColor = 'Color.frame_background_semitransparent',
+          ]"/>
+
+        <!-- Row 2: 3-Reel Display Boxes -->
+        <signal_cue_instantly
+          cue="md.Simple_Menu_API.Add_Row"
+          param="table[$selectable = false]"/>
+        <signal_cue_instantly
+          cue="md.Simple_Menu_API.Make_BoxText"
+          param="table[
+            $col = 1,
+            $id = 'box_reel1',
+            $text = $data.$Reel1,
+            $halign = 'center',
+            $fontsize = 16,
+          ]"/>
+        <signal_cue_instantly
+          cue="md.Simple_Menu_API.Make_BoxText"
+          param="table[
+            $col = 2,
+            $id = 'box_reel2',
+            $text = $data.$Reel2,
+            $halign = 'center',
+            $fontsize = 16,
+          ]"/>
+        <signal_cue_instantly
+          cue="md.Simple_Menu_API.Make_BoxText"
+          param="table[
+            $col = 3,
+            $id = 'box_reel3',
+            $text = $data.$Reel3,
+            $halign = 'center',
+            $fontsize = 16,
+          ]"/>
+
+        <!-- Row 3: Result and Payout Message -->
+        <signal_cue_instantly
+          cue="md.Simple_Menu_API.Add_Row"
+          param="table[$selectable = false]"/>
+        <signal_cue_instantly
+          cue="md.Simple_Menu_API.Make_Text"
+          param="table[
+            $col = 1,
+            $colSpan = 3,
+            $id = 'txt_banner',
+            $text = $data.$ResultBanner,
+            $halign = 'center',
+            $color = 'Color.chatuser_5',
+            $cellBGColor = 'Color.frame_background_semitransparent',
+          ]"/>
+
+        <!-- Row 4: Bet Amount Buttons -->
+        <signal_cue_instantly
+          cue="md.Simple_Menu_API.Add_Row"
+          param="table[]"/>
+        <signal_cue_instantly
+          cue="md.Simple_Menu_API.Make_Button"
+          param="table[
+            $col = 1,
+            $id = 'btn_bet_1000',
+            $text = 'Bet: 1,000 Cr',
+            $onClick = Handle_Casino_Action,
+          ]"/>
+        <signal_cue_instantly
+          cue="md.Simple_Menu_API.Make_Button"
+          param="table[
+            $col = 2,
+            $id = 'btn_bet_5000',
+            $text = 'Bet: 5,000 Cr',
+            $onClick = Handle_Casino_Action,
+          ]"/>
+        <signal_cue_instantly
+          cue="md.Simple_Menu_API.Make_Button"
+          param="table[
+            $col = 3,
+            $id = 'btn_bet_25000',
+            $text = 'Bet: 25,000 Cr',
+            $onClick = Handle_Casino_Action,
+          ]"/>
+
+        <!-- Row 5: Spin Button & High Roller -->
+        <signal_cue_instantly
+          cue="md.Simple_Menu_API.Add_Row"
+          param="table[]"/>
+        <signal_cue_instantly
+          cue="md.Simple_Menu_API.Make_Button"
+          param="table[
+            $col = 1,
+            $id = 'btn_bet_100000',
+            $text = 'Bet: 100,000 Cr',
+            $onClick = Handle_Casino_Action,
+          ]"/>
+        <signal_cue_instantly
+          cue="md.Simple_Menu_API.Make_Button"
+          param="table[
+            $col = 2,
+            $id = 'btn_spin',
+            $text = '★ ★ ★  SPIN!  ★ ★ ★',
+            $onClick = Handle_Casino_Action,
+          ]"/>
+        <signal_cue_instantly
+          cue="md.Simple_Menu_API.Make_Button"
+          param="table[
+            $col = 3,
+            $id = 'btn_payout_info',
+            $text = 'Paytable Info',
+            $onClick = Handle_Casino_Action,
+          ]"/>
+      </actions>
+    </cue>
+
+    <!--
+      Handle Button Clicks and Spin Logic
+    -->
+    <cue name="Handle_Casino_Action" instantiate="true" namespace="this">
+      <conditions>
+        <event_cue_signalled/>
+      </conditions>
+      <actions>
+        <set_value name="$data" exact="player.entity.$casino_data"/>
+
+        <!-- Bet 1,000 -->
+        <do_if value="event.param.$id == 'btn_bet_1000'">
+          <set_value name="$data.$CurrentBet" exact="1000"/>
+          <set_value name="$data.$ResultBanner" exact="'Bet set to 1,000 Credits.'"/>
+          <signal_cue_instantly cue="md.Simple_Menu_API.Refresh_Menu"/>
+        </do_if>
+
+        <!-- Bet 5,000 -->
+        <do_if value="event.param.$id == 'btn_bet_5000'">
+          <set_value name="$data.$CurrentBet" exact="5000"/>
+          <set_value name="$data.$ResultBanner" exact="'Bet set to 5,000 Credits.'"/>
+          <signal_cue_instantly cue="md.Simple_Menu_API.Refresh_Menu"/>
+        </do_if>
+
+        <!-- Bet 25,000 -->
+        <do_if value="event.param.$id == 'btn_bet_25000'">
+          <set_value name="$data.$CurrentBet" exact="25000"/>
+          <set_value name="$data.$ResultBanner" exact="'Bet set to 25,000 Credits.'"/>
+          <signal_cue_instantly cue="md.Simple_Menu_API.Refresh_Menu"/>
+        </do_if>
+
+        <!-- Bet 100,000 -->
+        <do_if value="event.param.$id == 'btn_bet_100000'">
+          <set_value name="$data.$CurrentBet" exact="100000"/>
+          <set_value name="$data.$ResultBanner" exact="'High Roller! Bet set to 100,000 Credits.'"/>
+          <signal_cue_instantly cue="md.Simple_Menu_API.Refresh_Menu"/>
+        </do_if>
+
+        <!-- Paytable Info -->
+        <do_if value="event.param.$id == 'btn_payout_info'">
+          <set_value name="$data.$ResultBanner" exact="'Paytable: 3x Profit (50x) | 3x Nividium (20x) | 3x Ore/Silicon (10x) | 3x Energy (5x) | 2x Match (2x)'"/>
+          <signal_cue_instantly cue="md.Simple_Menu_API.Refresh_Menu"/>
+        </do_if>
+
+        <!-- SPIN BUTTON PRESSED -->
+        <do_if value="event.param.$id == 'btn_spin'">
+          <set_value name="$betCr" exact="$data.$CurrentBet"/>
+          <set_value name="$betInternal" exact="$betCr * 100"/>
+
+          <do_if value="player.money lt $betInternal">
+            <set_value name="$data.$ResultBanner" exact="'Insufficient Credits for this bet!'"/>
+            <signal_cue_instantly cue="md.Simple_Menu_API.Refresh_Menu"/>
+          </do_if>
+          <do_else>
+            <!-- Deduct Bet -->
+            <reward_player money="-$betInternal"/>
+            <set_value name="$data.$TotalSpins" operation="add"/>
+
+            <!-- Spin Reel 1 -->
+            <set_value name="$r1_roll" min="1" max="12"/>
+            <do_if value="$r1_roll le 5">
+              <set_value name="$data.$Reel1" exact="'[ E-CELLS ]'"/>
+              <set_value name="$sym1" exact="'energy_cells'"/>
             </do_if>
+            <do_elseif value="$r1_roll le 8">
+              <set_value name="$data.$Reel1" exact="'[   ORE   ]'"/>
+              <set_value name="$sym1" exact="'ore'"/>
+            </do_elseif>
+            <do_elseif value="$r1_roll le 10">
+              <set_value name="$data.$Reel1" exact="'[ SILICON ]'"/>
+              <set_value name="$sym1" exact="'silicon'"/>
+            </do_elseif>
+            <do_elseif value="$r1_roll == 11">
+              <set_value name="$data.$Reel1" exact="'[ NIVIDIUM]'"/>
+              <set_value name="$sym1" exact="'nividium'"/>
+            </do_elseif>
+            <do_else>
+              <set_value name="$data.$Reel1" exact="'[ PROFIT! ]'"/>
+              <set_value name="$sym1" exact="'teladi_profit'"/>
+            </do_else>
 
-            <!-- Row 1: Header / Balance -->
-            <signal_cue_instantly
-              cue="md.Simple_Menu_API.Add_Row"
-              param="table[$selectable = false]"/>
-            <signal_cue_instantly
-              cue="md.Simple_Menu_API.Make_Text"
-              param="table[
-                $col = 1,
-                $colSpan = 3,
-                $text = 'TELADI PROFIT SPINNER  |  Balance: ' + (player.money / 100) + ' Cr  |  Current Bet: ' + CasinoData.$CurrentBet + ' Cr',
-                $halign = 'center',
-                $cellBGColor = 'Color.frame_background_semitransparent',
-              ]"/>
-
-            <!-- Row 2: 3-Reel Display Boxes -->
-            <signal_cue_instantly
-              cue="md.Simple_Menu_API.Add_Row"
-              param="table[$selectable = false]"/>
-            <signal_cue_instantly
-              cue="md.Simple_Menu_API.Make_BoxText"
-              param="table[
-                $col = 1,
-                $id = 'box_reel1',
-                $text = CasinoData.$Reel1,
-                $halign = 'center',
-                $fontsize = 16,
-              ]"/>
-            <signal_cue_instantly
-              cue="md.Simple_Menu_API.Make_BoxText"
-              param="table[
-                $col = 2,
-                $id = 'box_reel2',
-                $text = CasinoData.$Reel2,
-                $halign = 'center',
-                $fontsize = 16,
-              ]"/>
-            <signal_cue_instantly
-              cue="md.Simple_Menu_API.Make_BoxText"
-              param="table[
-                $col = 3,
-                $id = 'box_reel3',
-                $text = CasinoData.$Reel3,
-                $halign = 'center',
-                $fontsize = 16,
-              ]"/>
-
-            <!-- Row 3: Result and Payout Message -->
-            <signal_cue_instantly
-              cue="md.Simple_Menu_API.Add_Row"
-              param="table[$selectable = false]"/>
-            <signal_cue_instantly
-              cue="md.Simple_Menu_API.Make_Text"
-              param="table[
-                $col = 1,
-                $colSpan = 3,
-                $id = 'txt_banner',
-                $text = CasinoData.$ResultBanner,
-                $halign = 'center',
-                $color = 'Color.chatuser_5',
-                $cellBGColor = 'Color.frame_background_semitransparent',
-              ]"/>
-
-            <!-- Row 4: Bet Amount Buttons -->
-            <signal_cue_instantly
-              cue="md.Simple_Menu_API.Add_Row"
-              param="table[]"/>
-            <signal_cue_instantly
-              cue="md.Simple_Menu_API.Make_Button"
-              param="table[
-                $col = 1,
-                $id = 'btn_bet_1000',
-                $text = 'Bet: 1,000 Cr',
-                $onClick = Handle_Casino_Action,
-              ]"/>
-            <signal_cue_instantly
-              cue="md.Simple_Menu_API.Make_Button"
-              param="table[
-                $col = 2,
-                $id = 'btn_bet_5000',
-                $text = 'Bet: 5,000 Cr',
-                $onClick = Handle_Casino_Action,
-              ]"/>
-            <signal_cue_instantly
-              cue="md.Simple_Menu_API.Make_Button"
-              param="table[
-                $col = 3,
-                $id = 'btn_bet_25000',
-                $text = 'Bet: 25,000 Cr',
-                $onClick = Handle_Casino_Action,
-              ]"/>
-
-            <!-- Row 5: Spin Button & High Roller -->
-            <signal_cue_instantly
-              cue="md.Simple_Menu_API.Add_Row"
-              param="table[]"/>
-            <signal_cue_instantly
-              cue="md.Simple_Menu_API.Make_Button"
-              param="table[
-                $col = 1,
-                $id = 'btn_bet_100000',
-                $text = 'Bet: 100,000 Cr',
-                $onClick = Handle_Casino_Action,
-              ]"/>
-            <signal_cue_instantly
-              cue="md.Simple_Menu_API.Make_Button"
-              param="table[
-                $col = 2,
-                $id = 'btn_spin',
-                $text = '★ ★ ★  SPIN!  ★ ★ ★',
-                $onClick = Handle_Casino_Action,
-              ]"/>
-            <signal_cue_instantly
-              cue="md.Simple_Menu_API.Make_Button"
-              param="table[
-                $col = 3,
-                $id = 'btn_payout_info',
-                $text = 'Paytable Info',
-                $onClick = Handle_Casino_Action,
-              ]"/>
-          </actions>
-        </cue>
-
-        <!--
-          Handle Button Clicks and Spin Logic
-        -->
-        <cue name="Handle_Casino_Action" instantiate="true">
-          <conditions>
-            <event_cue_signalled/>
-          </conditions>
-          <actions>
-            <!-- Bet 1,000 -->
-            <do_if value="event.param.$id == 'btn_bet_1000'">
-              <set_value name="CasinoData.$CurrentBet" exact="1000"/>
-              <set_value name="CasinoData.$ResultBanner" exact="'Bet set to 1,000 Credits.'"/>
-              <signal_cue_instantly cue="md.Simple_Menu_API.Refresh_Menu"/>
+            <!-- Spin Reel 2 -->
+            <set_value name="$r2_roll" min="1" max="12"/>
+            <do_if value="$r2_roll le 5">
+              <set_value name="$data.$Reel2" exact="'[ E-CELLS ]'"/>
+              <set_value name="$sym2" exact="'energy_cells'"/>
             </do_if>
+            <do_elseif value="$r2_roll le 8">
+              <set_value name="$data.$Reel2" exact="'[ SILICON ]'"/>
+              <set_value name="$sym2" exact="'silicon'"/>
+            </do_elseif>
+            <do_elseif value="$r2_roll le 10">
+              <set_value name="$data.$Reel2" exact="'[   ORE   ]'"/>
+              <set_value name="$sym2" exact="'ore'"/>
+            </do_elseif>
+            <do_elseif value="$r2_roll == 11">
+              <set_value name="$data.$Reel2" exact="'[ NIVIDIUM]'"/>
+              <set_value name="$sym2" exact="'nividium'"/>
+            </do_elseif>
+            <do_else>
+              <set_value name="$data.$Reel2" exact="'[ PROFIT! ]'"/>
+              <set_value name="$sym2" exact="'teladi_profit'"/>
+            </do_else>
 
-            <!-- Bet 5,000 -->
-            <do_if value="event.param.$id == 'btn_bet_5000'">
-              <set_value name="CasinoData.$CurrentBet" exact="5000"/>
-              <set_value name="CasinoData.$ResultBanner" exact="'Bet set to 5,000 Credits.'"/>
-              <signal_cue_instantly cue="md.Simple_Menu_API.Refresh_Menu"/>
+            <!-- Spin Reel 3 -->
+            <set_value name="$r3_roll" min="1" max="12"/>
+            <do_if value="$r3_roll le 5">
+              <set_value name="$data.$Reel3" exact="'[ E-CELLS ]'"/>
+              <set_value name="$sym3" exact="'energy_cells'"/>
             </do_if>
+            <do_elseif value="$r3_roll le 8">
+              <set_value name="$data.$Reel3" exact="'[   ORE   ]'"/>
+              <set_value name="$sym3" exact="'ore'"/>
+            </do_elseif>
+            <do_elseif value="$r3_roll le 10">
+              <set_value name="$data.$Reel3" exact="'[ SILICON ]'"/>
+              <set_value name="$sym3" exact="'silicon'"/>
+            </do_elseif>
+            <do_elseif value="$r3_roll == 11">
+              <set_value name="$data.$Reel3" exact="'[ NIVIDIUM]'"/>
+              <set_value name="$sym3" exact="'nividium'"/>
+            </do_elseif>
+            <do_else>
+              <set_value name="$data.$Reel3" exact="'[ PROFIT! ]'"/>
+              <set_value name="$sym3" exact="'teladi_profit'"/>
+            </do_else>
 
-            <!-- Bet 25,000 -->
-            <do_if value="event.param.$id == 'btn_bet_25000'">
-              <set_value name="CasinoData.$CurrentBet" exact="25000"/>
-              <set_value name="CasinoData.$ResultBanner" exact="'Bet set to 25,000 Credits.'"/>
-              <signal_cue_instantly cue="md.Simple_Menu_API.Refresh_Menu"/>
-            </do_if>
+            <!-- Evaluate Multipliers -->
+            <set_value name="$multiplier" exact="0"/>
+            <set_value name="$winTitle" exact="'No match. Teladi keeps profitsss!'"/>
 
-            <!-- Bet 100,000 -->
-            <do_if value="event.param.$id == 'btn_bet_100000'">
-              <set_value name="CasinoData.$CurrentBet" exact="100000"/>
-              <set_value name="CasinoData.$ResultBanner" exact="'High Roller! Bet set to 100,000 Credits.'"/>
-              <signal_cue_instantly cue="md.Simple_Menu_API.Refresh_Menu"/>
-            </do_if>
-
-            <!-- Paytable Info -->
-            <do_if value="event.param.$id == 'btn_payout_info'">
-              <set_value name="CasinoData.$ResultBanner" exact="'Paytable: 3x Profit (50x) | 3x Nividium (20x) | 3x Ore/Silicon (10x) | 3x Energy (5x) | 2x Match (2x)'"/>
-              <signal_cue_instantly cue="md.Simple_Menu_API.Refresh_Menu"/>
-            </do_if>
-
-            <!-- SPIN BUTTON PRESSED -->
-            <do_if value="event.param.$id == 'btn_spin'">
-              <set_value name="$betCr" exact="CasinoData.$CurrentBet"/>
-              <set_value name="$betInternal" exact="$betCr * 100"/>
-
-              <do_if value="player.money lt $betInternal">
-                <set_value name="CasinoData.$ResultBanner" exact="'Insufficient Credits for this bet!'"/>
-                <signal_cue_instantly cue="md.Simple_Menu_API.Refresh_Menu"/>
+            <do_if value="$sym1 == $sym2 and $sym2 == $sym3">
+              <do_if value="$sym1 == 'teladi_profit'">
+                <set_value name="$multiplier" exact="50"/>
+                <set_value name="$winTitle" exact="'★ ★ ★ TELADI JACKPOT! (50x) ★ ★ ★'"/>
               </do_if>
-              <do_else>
-                <!-- Deduct Bet -->
-                <reward_player money="-$betInternal"/>
-                <set_value name="CasinoData.$TotalSpins" operation="add"/>
-
-                <!-- Spin Reel 1 -->
-                <set_value name="$r1_roll" min="1" max="12"/>
-                <do_if value="$r1_roll le 5">
-                  <set_value name="CasinoData.$Reel1" exact="'[ E-CELLS ]'"/>
-                  <set_value name="$sym1" exact="'energy_cells'"/>
-                </do_if>
-                <do_elseif value="$r1_roll le 8">
-                  <set_value name="CasinoData.$Reel1" exact="'[   ORE   ]'"/>
-                  <set_value name="$sym1" exact="'ore'"/>
-                </do_elseif>
-                <do_elseif value="$r1_roll le 10">
-                  <set_value name="CasinoData.$Reel1" exact="'[ SILICON ]'"/>
-                  <set_value name="$sym1" exact="'silicon'"/>
-                </do_elseif>
-                <do_elseif value="$r1_roll == 11">
-                  <set_value name="CasinoData.$Reel1" exact="'[ NIVIDIUM]'"/>
-                  <set_value name="$sym1" exact="'nividium'"/>
-                </do_elseif>
-                <do_else>
-                  <set_value name="CasinoData.$Reel1" exact="'[ PROFIT! ]'"/>
-                  <set_value name="$sym1" exact="'teladi_profit'"/>
-                </do_else>
-
-                <!-- Spin Reel 2 -->
-                <set_value name="$r2_roll" min="1" max="12"/>
-                <do_if value="$r2_roll le 5">
-                  <set_value name="CasinoData.$Reel2" exact="'[ E-CELLS ]'"/>
-                  <set_value name="$sym2" exact="'energy_cells'"/>
-                </do_if>
-                <do_elseif value="$r2_roll le 8">
-                  <set_value name="CasinoData.$Reel2" exact="'[ SILICON ]'"/>
-                  <set_value name="$sym2" exact="'silicon'"/>
-                </do_elseif>
-                <do_elseif value="$r2_roll le 10">
-                  <set_value name="CasinoData.$Reel2" exact="'[   ORE   ]'"/>
-                  <set_value name="$sym2" exact="'ore'"/>
-                </do_elseif>
-                <do_elseif value="$r2_roll == 11">
-                  <set_value name="CasinoData.$Reel2" exact="'[ NIVIDIUM]'"/>
-                  <set_value name="$sym2" exact="'nividium'"/>
-                </do_elseif>
-                <do_else>
-                  <set_value name="CasinoData.$Reel2" exact="'[ PROFIT! ]'"/>
-                  <set_value name="$sym2" exact="'teladi_profit'"/>
-                </do_else>
-
-                <!-- Spin Reel 3 -->
-                <set_value name="$r3_roll" min="1" max="12"/>
-                <do_if value="$r3_roll le 5">
-                  <set_value name="CasinoData.$Reel3" exact="'[ E-CELLS ]'"/>
-                  <set_value name="$sym3" exact="'energy_cells'"/>
-                </do_if>
-                <do_elseif value="$r3_roll le 8">
-                  <set_value name="CasinoData.$Reel3" exact="'[   ORE   ]'"/>
-                  <set_value name="$sym3" exact="'ore'"/>
-                </do_elseif>
-                <do_elseif value="$r3_roll le 10">
-                  <set_value name="CasinoData.$Reel3" exact="'[ SILICON ]'"/>
-                  <set_value name="$sym3" exact="'silicon'"/>
-                </do_elseif>
-                <do_elseif value="$r3_roll == 11">
-                  <set_value name="CasinoData.$Reel3" exact="'[ NIVIDIUM]'"/>
-                  <set_value name="$sym3" exact="'nividium'"/>
-                </do_elseif>
-                <do_else>
-                  <set_value name="CasinoData.$Reel3" exact="'[ PROFIT! ]'"/>
-                  <set_value name="$sym3" exact="'teladi_profit'"/>
-                </do_else>
-
-                <!-- Evaluate Multipliers -->
-                <set_value name="$multiplier" exact="0"/>
-                <set_value name="$winTitle" exact="'No match. Teladi keeps profitsss!'"/>
-
-                <do_if value="$sym1 == $sym2 and $sym2 == $sym3">
-                  <do_if value="$sym1 == 'teladi_profit'">
-                    <set_value name="$multiplier" exact="50"/>
-                    <set_value name="$winTitle" exact="'★ ★ ★ TELADI JACKPOT! (50x) ★ ★ ★'"/>
-                  </do_if>
-                  <do_elseif value="$sym1 == 'nividium'">
-                    <set_value name="$multiplier" exact="20"/>
-                    <set_value name="$winTitle" exact="'♦ ♦ ♦ MAJOR WIN! (20x) ♦ ♦ ♦'"/>
-                  </do_elseif>
-                  <do_elseif value="$sym1 == 'silicon' or $sym1 == 'ore'">
-                    <set_value name="$multiplier" exact="10"/>
-                    <set_value name="$winTitle" exact="'▲ ▲ MEDIUM WIN! (10x) ▲ ▲'"/>
-                  </do_elseif>
-                  <do_elseif value="$sym1 == 'energy_cells'">
-                    <set_value name="$multiplier" exact="5"/>
-                    <set_value name="$winTitle" exact="'⚡ ENERGY BOOST! (5x) ⚡'"/>
-                  </do_elseif>
-                </do_if>
-                <do_elseif value="$sym1 == $sym2 or $sym2 == $sym3 or $sym1 == $sym3">
-                  <set_value name="$multiplier" exact="2"/>
-                  <set_value name="$winTitle" exact="'✓ PAIR MATCH! (2x Payout)'"/>
-                </do_elseif>
-
-                <!-- Credit Payout -->
-                <do_if value="$multiplier gt 0">
-                  <set_value name="$payoutCr" exact="$betCr * $multiplier"/>
-                  <set_value name="$payoutInternal" exact="$payoutCr * 100"/>
-                  <reward_player money="$payoutInternal"/>
-                  <set_value name="CasinoData.$TotalWon" exact="CasinoData.$TotalWon + $payoutCr"/>
-                  <set_value name="CasinoData.$ResultBanner" exact="$winTitle + ' Won: ' + $payoutCr + ' Cr!'"/>
-                </do_if>
-                <do_else>
-                  <set_value name="CasinoData.$ResultBanner" exact="$winTitle + ' Lost: ' + $betCr + ' Cr'"/>
-                </do_else>
-
-                <!-- Refresh the menu with updated reels & credits -->
-                <signal_cue_instantly cue="md.Simple_Menu_API.Refresh_Menu"/>
-              </do_else>
+              <do_elseif value="$sym1 == 'nividium'">
+                <set_value name="$multiplier" exact="20"/>
+                <set_value name="$winTitle" exact="'♦ ♦ ♦ MAJOR WIN! (20x) ♦ ♦ ♦'"/>
+              </do_elseif>
+              <do_elseif value="$sym1 == 'silicon' or $sym1 == 'ore'">
+                <set_value name="$multiplier" exact="10"/>
+                <set_value name="$winTitle" exact="'▲ ▲ MEDIUM WIN! (10x) ▲ ▲'"/>
+              </do_elseif>
+              <do_elseif value="$sym1 == 'energy_cells'">
+                <set_value name="$multiplier" exact="5"/>
+                <set_value name="$winTitle" exact="'⚡ ENERGY BOOST! (5x) ⚡'"/>
+              </do_elseif>
             </do_if>
-          </actions>
-        </cue>
+            <do_elseif value="$sym1 == $sym2 or $sym2 == $sym3 or $sym1 == $sym3">
+              <set_value name="$multiplier" exact="2"/>
+              <set_value name="$winTitle" exact="'✓ PAIR MATCH! (2x Payout)'"/>
+            </do_elseif>
 
-      </cues>
+            <!-- Credit Payout -->
+            <do_if value="$multiplier gt 0">
+              <set_value name="$payoutCr" exact="$betCr * $multiplier"/>
+              <set_value name="$payoutInternal" exact="$payoutCr * 100"/>
+              <reward_player money="$payoutInternal"/>
+              <set_value name="$data.$TotalWon" exact="$data.$TotalWon + $payoutCr"/>
+              <set_value name="$data.$ResultBanner" exact="$winTitle + ' Won: ' + $payoutCr + ' Cr!'"/>
+            </do_if>
+            <do_else>
+              <set_value name="$data.$ResultBanner" exact="$winTitle + ' Lost: ' + $betCr + ' Cr'"/>
+            </do_else>
+
+            <!-- Refresh the menu with updated reels & credits -->
+            <signal_cue_instantly cue="md.Simple_Menu_API.Refresh_Menu"/>
+          </do_else>
+        </do_if>
+      </actions>
     </cue>
   </cues>
 </mdscript>
