@@ -83,8 +83,8 @@ Three-tier decoupled mod architecture centered around the vanilla **Casino** and
 - [x] Environment Setup Implemented & Verified (T1–T5)
 - [x] 3-Reel Slots TDD Core Complete (T6)
 - [x] Phase 3 Continuous Build Packaged & Uploaded (`dist/x4_casino_mod.zip`)
-- [ ] Phase 4 Manual Verification Passed
-- [ ] Phase 5 PR Merged & Tagged (`v0.1.0-beta`)
+- [x] Phase 4 Manual Verification Passed
+- [x] Phase 5 Released & Tagged (`v0.1.0-beta`)
 
 ## 7. Release Configuration
 **Continuous Release Tag:** continuous-build
