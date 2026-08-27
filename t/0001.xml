@@ -1,20 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <language id="44">
   <page id="998811" title="X4 Casino Mod" descr="Text entries and game strings for X4 Casino Mod" voice="no">
-    <!-- General UI -->
-    <t id="1">Casino Games</t>
+    <!-- General UI & Lobby -->
+    <t id="1">Station Casino &amp; Gaming Lobby</t>
     <t id="2">Select Game</t>
     <t id="3">Current Balance: %s Cr</t>
     <t id="4">Bet: %s Cr</t>
     <t id="5">Spin</t>
     <t id="6">Payout: %s Cr</t>
-    <!-- Slot Game -->
+    <t id="10">Casino Game Lobby</t>
+    <t id="11">Station House Ledger</t>
+    <t id="12">Owner Free-Play (Demo Mode)</t>
+    <t id="13">Station Treasury Low: Requires %s Cr reserve to back max jackpot.</t>
+    <t id="14">Space 21 Blackjack</t>
+    <t id="15">Orbital Roulette</t>
+    <t id="16">Player Lifetime Statistics</t>
+    <t id="17">Total Spins: %s  |  Wagered: %s Cr  |  Won: %s Cr  |  Net: %s Cr  |  Jackpots: %s</t>
+    <t id="18">House Revenue: %s Cr  |  Payouts: %s Cr  |  Net House Income: %s Cr  |  Visits: %s</t>
+    <t id="19">Play Teladi Profit Spinner</t>
+    <t id="20">Speak to Casino Host</t>
+
+    <!-- Slot Game Strings -->
     <t id="100">Teladi Profit Spinner</t>
     <t id="101">Match 3 symbols across the payline to win profitsss!</t>
-    <t id="102">Jackpot! 3x Teladi Profit (50x)</t>
-    <t id="103">Major Win! 3x Nividium (20x)</t>
-    <t id="104">Medium Win! 3x Ore / Silicon (10x)</t>
-    <t id="105">Minor Win! 2x Match (2x)</t>
-    <t id="106">No match. Better luck next spin!</t>
+    <t id="102">★ ★ ★ TELADI JACKPOT! (50x) ★ ★ ★</t>
+    <t id="103">♦ ♦ ♦ MAJOR WIN! (20x) ♦ ♦ ♦</t>
+    <t id="104">▲ ▲ MEDIUM WIN! (10x) ▲ ▲</t>
+    <t id="105">⚡ ENERGY BOOST! (5x) ⚡</t>
+    <t id="106">✓ PAIR MATCH! (2x Payout)</t>
+    <t id="107">No match. Teladi keeps profitsss!</t>
+    <t id="108">Station treasury drained! Paid remaining balance down to 0 Cr.</t>
   </page>
 </language>

@@ -120,8 +120,31 @@ try {
             exit 0
         }
 
-        # 2. Build & packaging scripts
-        if ($cmd -match '^\s*(\./gradlew|gradlew|gradlew\.bat|cargo|make)\b') {
+        # 2. PowerShell Script Execution & File Creation (Scoped within workspace or subfolders)
+        if ($cmd -match '^\s*(powershell|pwsh)(\.exe)?\b' -or
+            $cmd -match '^\s*(&\s*)?(\.[\/\\]|[a-zA-Z]:[\\/])?[^\r\n]+\.ps1\b' -or
+            $cmd -match '^\s*(New-Item|ni|mkdir|Set-Content|sc|Add-Content|ac|Out-File|Copy-Item|cpi|cp|Move-Item|mi|mv|touch)\b' -or
+            $cmd -match '^\s*(\./gradlew|gradlew|gradlew\.bat|cargo|make)\b') {
+            
+            # Check if any explicit absolute path in the command targets a location outside the workspace
+            $absPathMatches = [regex]::Matches($cmd, '([a-zA-Z]:[\\/][^\s"''`]+)')
+            $outsideWorkspace = $false
+            foreach ($m in $absPathMatches) {
+                $targetPath = [System.IO.Path]::GetFullPath($m.Value)
+                if (-not $targetPath.StartsWith($normalizedWorkspace, [System.StringComparison]::OrdinalIgnoreCase)) {
+                    $outsideWorkspace = $true
+                    break
+                }
+            }
+
+            if ($outsideWorkspace) {
+                [PSCustomObject]@{
+                    decision = "ask"
+                    reason = "Command contains paths targeting outside workspace boundary."
+                } | ConvertTo-Json -Compress
+                exit 0
+            }
+
             [PSCustomObject]@{ decision = "allow" } | ConvertTo-Json -Compress
             exit 0
         }

@@ -5,6 +5,7 @@
 
 local X4Mock = {
     player_money = 1000000, -- Default 1,000,000 Cr
+    station_money = 5000000, -- Default 5,000,000 Cr
     registered_events = {},
     menu_rows = {},
     active_menu = nil,
@@ -15,6 +16,7 @@ local X4Mock = {
 -- Reset all mock state
 function X4Mock.reset()
     X4Mock.player_money = 1000000
+    X4Mock.station_money = 5000000
     X4Mock.registered_events = {}
     X4Mock.menu_rows = {}
     X4Mock.active_menu = nil
@@ -30,6 +32,15 @@ end
 _G.AddPlayerMoney = function(amount)
     X4Mock.player_money = X4Mock.player_money + amount
     return X4Mock.player_money
+end
+
+_G.GetStationMoney = function()
+    return X4Mock.station_money
+end
+
+_G.AddStationMoney = function(amount)
+    X4Mock.station_money = X4Mock.station_money + amount
+    return X4Mock.station_money
 end
 
 _G.DebugError = function(msg)

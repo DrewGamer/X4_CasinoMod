@@ -3,8 +3,8 @@
 ## 1. Project Context
 **Project Name:** X4 Foundations Casino Mod (`x4_casino_mod`)
 **Project Type:** Game Mod
-**Current Stage:** Phase 1 - Architecture & Research (Station Physical 'F' Interaction for Slots)
-**Active Branch:** `main`
+**Current Stage:** Phase 3 - Intermediate Release Packaging (Continuous Build)
+**Active Branch:** `feat/station-physical-interaction`
 **Primary Tech Stack:**
 - **Game Engine Target:** X4: Foundations (Egosoft)
 - **Scripting & Logic:** Lua 5.1 / LuaJIT (Game UI & Core Logic), XML / Mission Director (Game Quests, NPC interactions, Cues)
@@ -13,7 +13,7 @@
 - **Automation:** PowerShell build & test scripts (`scripts/test.ps1`, `scripts/build.ps1`, `scripts/deploy_local.ps1`)
 
 ## 2. Active Goal & Constraints (B8 Attention Anchor)
-**Current Objective:** Research, architect, and implement physical `F` interaction cues for station casino and bar modules to trigger slot machines in-game (`T8`). Blackjack is deferred from active scope to prioritize physical station integration.
+**Current Objective:** Package and verify continuous build for station interior direct 'F' interactions, game lobby, and multi-game dispatcher (`T8`).
 **Hard Constraints:**
 - MUST pass human checkpoint for architecture approval before starting implementation.
 - MUST pass human checkpoint for branch selection and PR reviews.
@@ -29,11 +29,11 @@
 ## 3. Architecture & Tooling
 **Approved Architecture:**
 Three-tier decoupled mod architecture centered around the vanilla **Casino** and **Gambling Den** station modules (see [.agents/plans/archive/environment-setup-plan.md](file:///C:/Projects/X4_CasinoMod/.agents/plans/archive/environment-setup-plan.md)):
-1. **Core Domain Layer (`lua/casino_core/`)**: Pure Lua 5.1 business logic (slot reel strips, RNG state machines, credit ledger, payout calculations). 100% unit-tested with `luaunit`.
-2. **UI Adapter Layer (`ui/addons/x4_casino_mod/`)**: Lua UI extensions integrating with kuertee UI Extensions (Nexus 552) and SirNukes Simple Menu API for rendering interactive 2D table overlays, slot displays, and betting controls.
+1. **Core Domain Layer (`lua/casino_core/`)**: Pure Lua 5.1 business logic (game registry, slot reel strips, RNG state machines, credit ledger, payout calculations). 100% unit-tested with `luaunit`.
+2. **UI Adapter Layer (`ui/addons/x4_casino_mod/`)**: Lua UI extensions integrating with kuertee UI Extensions (Nexus 552) and SirNukes Simple Menu API for rendering interactive 2D table overlays, slot displays, betting controls, and central Game Lobby.
 3. **Mission Director & Game Integration Layer (`md/`, `t/`, `content.xml`)**:
-   - Hooks into the vanilla **Casino** and **Gambling Den** interior rooms (and standard Station Bars as a fallback).
-   - Enables physical `F` interaction on gaming tables, terminals, and croupier NPCs inside casino rooms (zero comms menu clutter).
+   - Direct 'F' interaction cues on room terminals (instant game launch) and Casino Host/Bartender NPCs (Game Lobby).
+   - Closed-loop player station economics with solvency checks, graceful treasury drain, and Owner Free-Play mode.
    - Station Economy & "The House" mechanic: Player-owned casinos generate station revenue from NPC visitors, while playing at NPC casinos pays the local faction.
 
 **Dependencies / Frameworks / Tools:**
@@ -48,9 +48,9 @@ Three-tier decoupled mod architecture centered around the vanilla **Casino** and
   - Egosoft Catalog Tool (`XRcatTool.exe`) or Python catalog tool
 
 **Version Mapping Convention:**
-- `content.xml`: `version="010"` (X4 integer format)
-- Git Tag / GitHub Release: `v0.1.0-beta` (SemVer 2.0.0)
-- `CHANGELOG.md`: Tracks `## [Unreleased]` -> `## [v0.1.0-beta]`
+- `content.xml`: `version="020"` (X4 integer format)
+- Git Tag / GitHub Release: `v0.2.0-beta` (SemVer 2.0.0)
+- `CHANGELOG.md`: Tracks `## [Unreleased]` -> `## [v0.2.0-beta]`
 
 **Build / Packaging Command:** `powershell -ExecutionPolicy Bypass -File scripts/build.ps1`
 **Verification / Test Command:** `powershell -ExecutionPolicy Bypass -File scripts/test.ps1`
@@ -66,14 +66,20 @@ Three-tier decoupled mod architecture centered around the vanilla **Casino** and
 | T5 | Build & Local Deployment Automation Scripts (`scripts/build.ps1`, `scripts/deploy_local.ps1`) | done | xp-developer | T4 |
 | T6 | Feature: 3-Reel Slots Core Engine TDD (Teladi Profit Spinner - PoC) | done | xp-developer | T3, T5 |
 | T7 | Feature: SirNukes Simple Menu Adapter for 3-Reel Slots UI (PoC) | done | xp-developer | T6 |
-| T8 | Feature: Station Casino & Bar Physical 'F' Interaction Cues (`md/CasinoStationCues.xml`) | pending | xp-developer | T7 |
+| T8 | Feature: Station Physical Interaction & Multi-Game Dispatcher | done | xp-developer | T7 |
+| T8.1 | Game Registry & Dispatcher Scaffolding (`lua/casino_core/game_registry.lua`, `tests/lua/test_game_registry.lua`) | done | xp-developer | T8 |
+| T8.2 | MD Physical Room Detection & Direct Terminal Triggers (`md/CasinoStationCues.xml`) | done | xp-developer | T8.1 |
+| T8.3 | Casino Host & Bar Lobby Direct Triggers (`md/CasinoStationCues.xml`) | done | xp-developer | T8.2 |
+| T8.4 | Standalone Modal Menu Launcher & Game Lobby UI (`Simple_Menu_API.Create_Menu`) | done | xp-developer | T8.2 |
+| T8.5 | Station Economy Ledger, Solvency Checks & Owner Free-Play (`$casino_data`, `$casino_ledger`) | done | xp-developer | T8.4 |
+| T8.6 | End-to-End Test Suite, XML Schema Validation, & Dist Packaging | done | xp-developer | T8.5 |
 
 ## 5. Sub-Agent Coordination
-- **Phase 0 & 1**: Plan updated by `xp-architect` and submitted for human checkpoint review.
-- **Phase 2 Execution**: `xp-developer` executed tasks `T1` through `T6` sequentially on feature branch `feat/scaffolding-and-slots-poc`.
+- **Phase 0 & 1**: Plan and Station Interaction Architectural Proposal created by `xp-architect` in [.agents/plans/xp-state.md](file:///C:/Projects/X4_CasinoMod/.agents/plans/xp-state.md) and artifact `station-interior-interaction-architecture.md`, approved via human checkpoint.
+- **Phase 2 Execution**: `xp-developer` executed tasks `T8.1` through `T8.6` on feature branch `feat/station-physical-interaction`.
 - **Phase 3 Continuous Packaging**: `release-packager` will bundle `dist/x4_casino_mod.zip` and publish to GitHub tag `continuous-build`.
 - **Phase 4 Manual Checkpoint**: Human manual verification of test suite & built artifact.
-- **Phase 5 Release Gate**: PR creation via `gh pr create`, merge to `main`, `CHANGELOG.md` stamp, and SemVer release creation (`v0.1.0-beta`).
+- **Phase 5 Release Gate**: PR creation via `gh pr create`, merge to `main`, `CHANGELOG.md` stamp, and SemVer release creation (`v0.2.0-beta`).
 
 ## 6. Checkpoints & History
 - [x] Environment Scaffolding Plan Drafted & XP-Aligned
@@ -84,6 +90,7 @@ Three-tier decoupled mod architecture centered around the vanilla **Casino** and
 - [x] Phase 3 Continuous Build Packaged & Uploaded (`dist/x4_casino_mod.zip`)
 - [x] Phase 4 Manual Verification Passed
 - [x] Phase 5 Released & Tagged (`v0.1.0-beta`)
+- [x] Phase 2 Station Physical Interactions & Multi-Game Dispatcher Implemented (T8.1–T8.6)
 
 ## 7. Release Configuration
 **Continuous Release Tag:** continuous-build

@@ -20,26 +20,375 @@
           <set_value name="player.entity.$casino_data.$Reel3" exact="'[ PROFIT! ]'"/>
           <set_value name="player.entity.$casino_data.$ResultBanner" exact="'Match 3 symbols for profitsss!'"/>
           <set_value name="player.entity.$casino_data.$TotalSpins" exact="0"/>
+          <set_value name="player.entity.$casino_data.$TotalWagered" exact="0"/>
           <set_value name="player.entity.$casino_data.$TotalWon" exact="0"/>
+          <set_value name="player.entity.$casino_data.$NetProfit" exact="0"/>
+          <set_value name="player.entity.$casino_data.$JackpotsHit" exact="0"/>
+          <set_value name="player.entity.$casino_data.$DemoMode" exact="0"/>
         </do_if>
       </actions>
     </cue>
 
     <!--
-      Register the Slot Machine in SirNukes Extension Options Menu
+      Register Menus in SirNukes Options Menu (Fallback / Config Access)
     -->
     <cue name="Register_Options_Menu" instantiate="true" namespace="this">
       <conditions>
         <event_cue_signalled cue="md.Simple_Menu_API.Reloaded"/>
       </conditions>
       <actions>
+        <!-- Register Slots in Options Menu -->
         <signal_cue_instantly
           cue="md.Simple_Menu_API.Register_Options_Menu"
           param="table[
             $id       = 'x4_casino_slots_menu',
-            $columns  = 3, 
+            $columns  = 3,
             $title    = 'Teladi Profit Spinner',
             $onOpen   = Build_Slots_Menu,
+          ]"/>
+
+        <!-- Register Casino Lobby in Options Menu -->
+        <signal_cue_instantly
+          cue="md.Simple_Menu_API.Register_Options_Menu"
+          param="table[
+            $id       = 'x4_casino_lobby_menu',
+            $columns  = 4,
+            $title    = 'Station Casino &amp; Gaming Lobby',
+            $onOpen   = Build_Lobby_Menu,
+          ]"/>
+      </actions>
+    </cue>
+
+    <!--
+      Interact Menu Hooks (Direct 'F' Interaction on NPCs and Station Props)
+    -->
+    <cue name="Add_Interact_Menu_Actions" instantiate="true" namespace="this">
+      <conditions>
+        <event_cue_signalled cue="md.Interact_Menu_API.Get_Actions"/>
+      </conditions>
+      <actions>
+        <set_value name="$target" exact="event.param.$object"/>
+        <!-- Add Lobby Action to NPCs and station interaction menus -->
+        <signal_cue_instantly
+          cue="md.Interact_Menu_API.Add_Action"
+          param="table[
+            $id         = 'x4_casino_open_lobby',
+            $text       = 'Casino Game Lobby',
+            $icon       = 'order_dock',
+            $section    = 'main',
+            $callback   = Open_Lobby_Direct,
+          ]"/>
+
+        <!-- Add Direct Slots Action -->
+        <signal_cue_instantly
+          cue="md.Interact_Menu_API.Add_Action"
+          param="table[
+            $id         = 'x4_casino_open_slots',
+            $text       = 'Play Teladi Profit Spinner',
+            $icon       = 'order_dock',
+            $section    = 'main',
+            $callback   = Open_Slots_Direct,
+          ]"/>
+      </actions>
+    </cue>
+
+    <!--
+      Direct Modal Launcher: Open Casino Game Lobby
+    -->
+    <cue name="Open_Lobby_Direct" instantiate="true" namespace="this">
+      <conditions>
+        <event_cue_signalled/>
+      </conditions>
+      <actions>
+        <!-- Ensure player data table exists -->
+        <do_if value="not player.entity.$casino_data?">
+          <set_value name="player.entity.$casino_data" exact="table[]"/>
+          <set_value name="player.entity.$casino_data.$CurrentBet" exact="5000"/>
+          <set_value name="player.entity.$casino_data.$Reel1" exact="'[ --- ]'"/>
+          <set_value name="player.entity.$casino_data.$Reel2" exact="'[ --- ]'"/>
+          <set_value name="player.entity.$casino_data.$Reel3" exact="'[ --- ]'"/>
+          <set_value name="player.entity.$casino_data.$ResultBanner" exact="'Welcome to the Station Casino!'"/>
+          <set_value name="player.entity.$casino_data.$TotalSpins" exact="0"/>
+          <set_value name="player.entity.$casino_data.$TotalWagered" exact="0"/>
+          <set_value name="player.entity.$casino_data.$TotalWon" exact="0"/>
+          <set_value name="player.entity.$casino_data.$NetProfit" exact="0"/>
+          <set_value name="player.entity.$casino_data.$JackpotsHit" exact="0"/>
+          <set_value name="player.entity.$casino_data.$DemoMode" exact="0"/>
+        </do_if>
+
+        <!-- Track Station House Ledger if docked at a station -->
+        <do_if value="player.station.exists">
+          <do_if value="not player.station.$casino_ledger?">
+            <set_value name="player.station.$casino_ledger" exact="table[]"/>
+            <set_value name="player.station.$casino_ledger.$HouseGrossRevenue" exact="0"/>
+            <set_value name="player.station.$casino_ledger.$HousePayoutsTotal" exact="0"/>
+            <set_value name="player.station.$casino_ledger.$HouseNetIncome" exact="0"/>
+            <set_value name="player.station.$casino_ledger.$VisitCount" exact="0"/>
+            <set_value name="player.station.$casino_ledger.$SpinsCount" exact="0"/>
+          </do_if>
+          <set_value name="player.station.$casino_ledger.$VisitCount" operation="add"/>
+        </do_if>
+
+        <!-- Create 4-column Standalone Modal -->
+        <signal_cue_instantly
+          cue="md.Simple_Menu_API.Create_Menu"
+          param="table[
+            $id             = 'x4_casino_lobby_menu',
+            $columns        = 4,
+            $title          = 'STATION CASINO &amp; GAMING LOBBY',
+            $width          = 850,
+            $onCloseElement = On_Menu_Closed,
+          ]"/>
+        <signal_cue_instantly cue="Build_Lobby_Menu"/>
+      </actions>
+    </cue>
+
+    <!--
+      Direct Modal Launcher: Open Slots Directly
+    -->
+    <cue name="Open_Slots_Direct" instantiate="true" namespace="this">
+      <conditions>
+        <event_cue_signalled/>
+      </conditions>
+      <actions>
+        <!-- Ensure player data table exists -->
+        <do_if value="not player.entity.$casino_data?">
+          <set_value name="player.entity.$casino_data" exact="table[]"/>
+          <set_value name="player.entity.$casino_data.$CurrentBet" exact="5000"/>
+          <set_value name="player.entity.$casino_data.$Reel1" exact="'[ --- ]'"/>
+          <set_value name="player.entity.$casino_data.$Reel2" exact="'[ --- ]'"/>
+          <set_value name="player.entity.$casino_data.$Reel3" exact="'[ --- ]'"/>
+          <set_value name="player.entity.$casino_data.$ResultBanner" exact="'Select bet and press SPIN to play!'"/>
+          <set_value name="player.entity.$casino_data.$TotalSpins" exact="0"/>
+          <set_value name="player.entity.$casino_data.$TotalWagered" exact="0"/>
+          <set_value name="player.entity.$casino_data.$TotalWon" exact="0"/>
+          <set_value name="player.entity.$casino_data.$NetProfit" exact="0"/>
+          <set_value name="player.entity.$casino_data.$JackpotsHit" exact="0"/>
+          <set_value name="player.entity.$casino_data.$DemoMode" exact="0"/>
+        </do_if>
+
+        <!-- Track Station House Ledger if docked at a station -->
+        <do_if value="player.station.exists">
+          <do_if value="not player.station.$casino_ledger?">
+            <set_value name="player.station.$casino_ledger" exact="table[]"/>
+            <set_value name="player.station.$casino_ledger.$HouseGrossRevenue" exact="0"/>
+            <set_value name="player.station.$casino_ledger.$HousePayoutsTotal" exact="0"/>
+            <set_value name="player.station.$casino_ledger.$HouseNetIncome" exact="0"/>
+            <set_value name="player.station.$casino_ledger.$VisitCount" exact="0"/>
+            <set_value name="player.station.$casino_ledger.$SpinsCount" exact="0"/>
+          </do_if>
+          <set_value name="player.station.$casino_ledger.$VisitCount" operation="add"/>
+        </do_if>
+
+        <!-- Create 3-column Standalone Modal -->
+        <signal_cue_instantly
+          cue="md.Simple_Menu_API.Create_Menu"
+          param="table[
+            $id             = 'x4_casino_slots_menu',
+            $columns        = 3,
+            $title          = 'TELADI PROFIT SPINNER',
+            $width          = 780,
+            $onCloseElement = On_Menu_Closed,
+          ]"/>
+        <signal_cue_instantly cue="Build_Slots_Menu"/>
+      </actions>
+    </cue>
+
+    <!--
+      Build the Casino Game Lobby UI Table
+    -->
+    <cue name="Build_Lobby_Menu" instantiate="true" namespace="this">
+      <conditions>
+        <event_cue_signalled/>
+      </conditions>
+      <actions>
+        <set_value name="$balanceCr" exact="player.money / 100"/>
+        <set_value name="$data" exact="player.entity.$casino_data"/>
+
+        <set_value name="$stationName" exact="'Station Casino Floor'"/>
+        <do_if value="player.station.exists">
+          <set_value name="$stationName" exact="player.station.name"/>
+        </do_if>
+
+        <!-- Row 1: Header / Location / Balance -->
+        <signal_cue_instantly cue="md.Simple_Menu_API.Add_Row" param="table[$selectable = false]"/>
+        <signal_cue_instantly
+          cue="md.Simple_Menu_API.Make_Text"
+          param="table[
+            $col = 1,
+            $colSpan = 4,
+            $text = $stationName + '  |  Player Balance: ' + $balanceCr + ' Cr',
+            $halign = 'center',
+            $cellBGColor = 'Color.frame_background_semitransparent',
+          ]"/>
+
+        <!-- Row 2: Catalog Section Header -->
+        <signal_cue_instantly cue="md.Simple_Menu_API.Add_Row" param="table[$selectable = false]"/>
+        <signal_cue_instantly
+          cue="md.Simple_Menu_API.Make_Text"
+          param="table[
+            $col = 1,
+            $colSpan = 4,
+            $text = 'AVAILABLE CASINO GAMES',
+            $halign = 'left',
+            $color = 'Color.chatuser_5',
+          ]"/>
+
+        <!-- Game 1: Teladi Profit Spinner (Active) -->
+        <signal_cue_instantly cue="md.Simple_Menu_API.Add_Row" param="table[]"/>
+        <signal_cue_instantly
+          cue="md.Simple_Menu_API.Make_Text"
+          param="table[
+            $col = 1,
+            $text = '[SLOTS] Teladi Profit Spinner',
+            $halign = 'left',
+          ]"/>
+        <signal_cue_instantly
+          cue="md.Simple_Menu_API.Make_Text"
+          param="table[
+            $col = 2,
+            $text = '3-Reel Classic Fruit/Ore Slot (1k - 100k Cr)',
+            $halign = 'left',
+          ]"/>
+        <signal_cue_instantly
+          cue="md.Simple_Menu_API.Make_Text"
+          param="table[
+            $col = 3,
+            $text = 'ACTIVE',
+            $color = 'Color.chatuser_5',
+            $halign = 'center',
+          ]"/>
+        <signal_cue_instantly
+          cue="md.Simple_Menu_API.Make_Button"
+          param="table[
+            $col = 4,
+            $id = 'btn_lobby_play_slots',
+            $text = table[$text = '▶ PLAY NOW', $halign = 'center'],
+            $onClick = Handle_Casino_Action,
+          ]"/>
+
+        <!-- Game 2: Space 21 Blackjack (Coming Soon) -->
+        <signal_cue_instantly cue="md.Simple_Menu_API.Add_Row" param="table[$selectable = false]"/>
+        <signal_cue_instantly
+          cue="md.Simple_Menu_API.Make_Text"
+          param="table[
+            $col = 1,
+            $text = '[CARDS] Space 21 Blackjack',
+            $halign = 'left',
+          ]"/>
+        <signal_cue_instantly
+          cue="md.Simple_Menu_API.Make_Text"
+          param="table[
+            $col = 2,
+            $text = 'Single-Deck Dealer Blackjack Pays 3:2 (5k - 500k Cr)',
+            $halign = 'left',
+          ]"/>
+        <signal_cue_instantly
+          cue="md.Simple_Menu_API.Make_Text"
+          param="table[
+            $col = 3,
+            $text = 'COMING SOON',
+            $color = 'Color.text_inactive',
+            $halign = 'center',
+          ]"/>
+        <signal_cue_instantly
+          cue="md.Simple_Menu_API.Make_Text"
+          param="table[
+            $col = 4,
+            $text = '(In Development)',
+            $color = 'Color.text_inactive',
+            $halign = 'center',
+          ]"/>
+
+        <!-- Game 3: Orbital Roulette (Coming Soon) -->
+        <signal_cue_instantly cue="md.Simple_Menu_API.Add_Row" param="table[$selectable = false]"/>
+        <signal_cue_instantly
+          cue="md.Simple_Menu_API.Make_Text"
+          param="table[
+            $col = 1,
+            $text = '[ROULETTE] Orbital Roulette',
+            $halign = 'left',
+          ]"/>
+        <signal_cue_instantly
+          cue="md.Simple_Menu_API.Make_Text"
+          param="table[
+            $col = 2,
+            $text = 'European Single-Zero Wheel (2.5k - 1M Cr)',
+            $halign = 'left',
+          ]"/>
+        <signal_cue_instantly
+          cue="md.Simple_Menu_API.Make_Text"
+          param="table[
+            $col = 3,
+            $text = 'COMING SOON',
+            $color = 'Color.text_inactive',
+            $halign = 'center',
+          ]"/>
+        <signal_cue_instantly
+          cue="md.Simple_Menu_API.Make_Text"
+          param="table[
+            $col = 4,
+            $text = '(In Development)',
+            $color = 'Color.text_inactive',
+            $halign = 'center',
+          ]"/>
+
+        <!-- Lifetime Statistics Section -->
+        <signal_cue_instantly cue="md.Simple_Menu_API.Add_Row" param="table[$selectable = false]"/>
+        <signal_cue_instantly
+          cue="md.Simple_Menu_API.Make_Text"
+          param="table[
+            $col = 1,
+            $colSpan = 4,
+            $text = 'PLAYER LIFETIME CASINO STATISTICS',
+            $halign = 'left',
+            $color = 'Color.chatuser_5',
+          ]"/>
+        <signal_cue_instantly cue="md.Simple_Menu_API.Add_Row" param="table[$selectable = false]"/>
+        <signal_cue_instantly
+          cue="md.Simple_Menu_API.Make_Text"
+          param="table[
+            $col = 1,
+            $colSpan = 4,
+            $text = 'Total Spins: ' + $data.$TotalSpins + '  |  Wagered: ' + $data.$TotalWagered + ' Cr  |  Won: ' + $data.$TotalWon + ' Cr  |  Net: ' + $data.$NetProfit + ' Cr  |  Jackpots: ' + $data.$JackpotsHit,
+            $halign = 'center',
+            $cellBGColor = 'Color.frame_background_semitransparent',
+          ]"/>
+
+        <!-- Station House Ledger Section (if player-owned station) -->
+        <do_if value="player.station.exists and player.station.isplayerowned and player.station.$casino_ledger?">
+          <signal_cue_instantly cue="md.Simple_Menu_API.Add_Row" param="table[$selectable = false]"/>
+          <signal_cue_instantly
+            cue="md.Simple_Menu_API.Make_Text"
+            param="table[
+              $col = 1,
+              $colSpan = 4,
+              $text = 'STATION HOUSE LEDGER (OWNER)',
+              $halign = 'left',
+              $color = 'Color.chatuser_5',
+            ]"/>
+          <signal_cue_instantly cue="md.Simple_Menu_API.Add_Row" param="table[$selectable = false]"/>
+          <signal_cue_instantly
+            cue="md.Simple_Menu_API.Make_Text"
+            param="table[
+              $col = 1,
+              $colSpan = 4,
+              $text = 'Gross Revenue: ' + player.station.$casino_ledger.$HouseGrossRevenue + ' Cr  |  Payouts: ' + player.station.$casino_ledger.$HousePayoutsTotal + ' Cr  |  Net House Income: ' + player.station.$casino_ledger.$HouseNetIncome + ' Cr  |  Visits: ' + player.station.$casino_ledger.$VisitCount,
+              $halign = 'center',
+              $cellBGColor = 'Color.frame_background_semitransparent',
+            ]"/>
+        </do_if>
+
+        <!-- Row: Close / Exit -->
+        <signal_cue_instantly cue="md.Simple_Menu_API.Add_Row" param="table[]"/>
+        <signal_cue_instantly
+          cue="md.Simple_Menu_API.Make_Button"
+          param="table[
+            $col = 1,
+            $colSpan = 4,
+            $id = 'btn_close_lobby',
+            $text = table[$text = 'Close Lobby', $halign = 'center'],
+            $onClick = Handle_Casino_Action,
           ]"/>
       </actions>
     </cue>
@@ -61,7 +410,11 @@
           <set_value name="player.entity.$casino_data.$Reel3" exact="'[ --- ]'"/>
           <set_value name="player.entity.$casino_data.$ResultBanner" exact="'Select bet and press SPIN to play!'"/>
           <set_value name="player.entity.$casino_data.$TotalSpins" exact="0"/>
+          <set_value name="player.entity.$casino_data.$TotalWagered" exact="0"/>
           <set_value name="player.entity.$casino_data.$TotalWon" exact="0"/>
+          <set_value name="player.entity.$casino_data.$NetProfit" exact="0"/>
+          <set_value name="player.entity.$casino_data.$JackpotsHit" exact="0"/>
+          <set_value name="player.entity.$casino_data.$DemoMode" exact="0"/>
         </do_if>
 
         <set_value name="$balanceCr" exact="player.money / 100"/>
@@ -76,12 +429,67 @@
           param="table[
             $col = 1,
             $colSpan = 3,
-            $text = 'TELADI PROFIT SPINNER  |  Balance: ' + $balanceCr + ' Cr  |  Current Bet: ' + $data.$CurrentBet + ' Cr',
+            $text = 'TELADI PROFIT SPINNER  |  Balance: ' + $balanceCr + ' Cr  |  Bet: ' + $data.$CurrentBet + ' Cr',
             $halign = 'center',
             $cellBGColor = 'Color.frame_background_semitransparent',
           ]"/>
 
-        <!-- Row 2: 3-Reel Display Boxes -->
+        <!-- Row 2: Mode Banner / Solvency Notice -->
+        <do_if value="$data.$DemoMode == 1">
+          <signal_cue_instantly cue="md.Simple_Menu_API.Add_Row" param="table[$selectable = false]"/>
+          <signal_cue_instantly
+            cue="md.Simple_Menu_API.Make_Text"
+            param="table[
+              $col = 1,
+              $colSpan = 3,
+              $text = '★ DEMO MODE / OWNER FREE-PLAY ACTIVE - No Credits Exchanged ★',
+              $halign = 'center',
+              $color = 'Color.chatuser_5',
+            ]"/>
+        </do_if>
+        <do_elseif value="player.station.exists and player.station.isplayerowned">
+          <set_value name="$stationTreasuryCr" exact="player.station.money / 100"/>
+          <set_value name="$reqReserveCr" exact="$data.$CurrentBet * 50"/>
+          <do_if value="$stationTreasuryCr lt $reqReserveCr">
+            <signal_cue_instantly cue="md.Simple_Menu_API.Add_Row" param="table[$selectable = false]"/>
+            <signal_cue_instantly
+              cue="md.Simple_Menu_API.Make_Text"
+              param="table[
+                $col = 1,
+                $colSpan = 3,
+                $text = 'Station Treasury Low: ' + $stationTreasuryCr + ' Cr (Requires ' + $reqReserveCr + ' Cr reserve for max jackpot)',
+                $halign = 'center',
+                $color = 'Color.text_inactive',
+              ]"/>
+          </do_if>
+        </do_elseif>
+
+        <!-- Row 3: Owner Free-Play Toggle Button -->
+        <signal_cue_instantly cue="md.Simple_Menu_API.Add_Row" param="table[]"/>
+        <do_if value="$data.$DemoMode == 1">
+          <signal_cue_instantly
+            cue="md.Simple_Menu_API.Make_Button"
+            param="table[
+              $col = 1,
+              $colSpan = 3,
+              $id = 'btn_toggle_demo',
+              $text = table[$text = 'Free-Play Active (Click to Switch to Live Credits)', $halign = 'center'],
+              $onClick = Handle_Casino_Action,
+            ]"/>
+        </do_if>
+        <do_else>
+          <signal_cue_instantly
+            cue="md.Simple_Menu_API.Make_Button"
+            param="table[
+              $col = 1,
+              $colSpan = 3,
+              $id = 'btn_toggle_demo',
+              $text = table[$text = 'Live Credits Mode (Click for Owner Free-Play / Demo Mode)', $halign = 'center'],
+              $onClick = Handle_Casino_Action,
+            ]"/>
+        </do_else>
+
+        <!-- Row 4: 3-Reel Display Boxes -->
         <signal_cue_instantly
           cue="md.Simple_Menu_API.Add_Row"
           param="table[$selectable = false]"/>
@@ -113,7 +521,7 @@
             $fontsize = 16,
           ]"/>
 
-        <!-- Row 3: Result and Payout Message -->
+        <!-- Row 5: Result and Payout Message -->
         <signal_cue_instantly
           cue="md.Simple_Menu_API.Add_Row"
           param="table[$selectable = false]"/>
@@ -129,7 +537,7 @@
             $cellBGColor = 'Color.frame_background_semitransparent',
           ]"/>
 
-        <!-- Row 4: Bet Amount Buttons -->
+        <!-- Row 6: Bet Amount Buttons -->
         <signal_cue_instantly
           cue="md.Simple_Menu_API.Add_Row"
           param="table[]"/>
@@ -158,7 +566,7 @@
             $onClick = Handle_Casino_Action,
           ]"/>
 
-        <!-- Row 5: Spin Button & High Roller -->
+        <!-- Row 7: High Roller, Spin, and Paytable -->
         <signal_cue_instantly
           cue="md.Simple_Menu_API.Add_Row"
           param="table[]"/>
@@ -190,11 +598,31 @@
             $text = table[$text = 'Paytable Info', $halign = 'center'],
             $onClick = Handle_Casino_Action,
           ]"/>
+
+        <!-- Row 8: Navigation & Exit -->
+        <signal_cue_instantly cue="md.Simple_Menu_API.Add_Row" param="table[]"/>
+        <signal_cue_instantly
+          cue="md.Simple_Menu_API.Make_Button"
+          param="table[
+            $col = 1,
+            $colSpan = 2,
+            $id = 'btn_go_lobby',
+            $text = table[$text = '◀ Casino Game Lobby', $halign = 'center'],
+            $onClick = Handle_Casino_Action,
+          ]"/>
+        <signal_cue_instantly
+          cue="md.Simple_Menu_API.Make_Button"
+          param="table[
+            $col = 3,
+            $id = 'btn_close_slots',
+            $text = table[$text = 'Close Machine', $halign = 'center'],
+            $onClick = Handle_Casino_Action,
+          ]"/>
       </actions>
     </cue>
 
     <!--
-      Handle Button Clicks and Spin Logic
+      Handle Button Clicks, Bet Switching, Demo Mode, and Spin Logic
     -->
     <cue name="Handle_Casino_Action" instantiate="true" namespace="this">
       <conditions>
@@ -202,6 +630,34 @@
       </conditions>
       <actions>
         <set_value name="$data" exact="player.entity.$casino_data"/>
+
+        <!-- Navigation: Go to Lobby -->
+        <do_if value="event.param.$id == 'btn_go_lobby'">
+          <signal_cue_instantly cue="Open_Lobby_Direct"/>
+        </do_if>
+
+        <!-- Navigation: Play Slots from Lobby -->
+        <do_if value="event.param.$id == 'btn_lobby_play_slots'">
+          <signal_cue_instantly cue="Open_Slots_Direct"/>
+        </do_if>
+
+        <!-- Navigation: Close Menus -->
+        <do_if value="event.param.$id == 'btn_close_lobby' or event.param.$id == 'btn_close_slots'">
+          <signal_cue_instantly cue="md.Simple_Menu_API.Close_Menu"/>
+        </do_if>
+
+        <!-- Toggle Demo Mode / Owner Free-Play -->
+        <do_if value="event.param.$id == 'btn_toggle_demo'">
+          <do_if value="$data.$DemoMode == 1">
+            <set_value name="$data.$DemoMode" exact="0"/>
+            <set_value name="$data.$ResultBanner" exact="'Demo mode disabled. Live Credits active.'"/>
+          </do_if>
+          <do_else>
+            <set_value name="$data.$DemoMode" exact="1"/>
+            <set_value name="$data.$ResultBanner" exact="'Owner Free-Play enabled. No credits deducted or won.'"/>
+          </do_else>
+          <signal_cue_instantly cue="md.Simple_Menu_API.Refresh_Menu"/>
+        </do_if>
 
         <!-- Bet 1,000 -->
         <do_if value="event.param.$id == 'btn_bet_1000'">
@@ -241,15 +697,31 @@
         <do_if value="event.param.$id == 'btn_spin'">
           <set_value name="$betCr" exact="$data.$CurrentBet"/>
           <set_value name="$betInternal" exact="$betCr * 100"/>
+          <set_value name="$isDemo" exact="($data.$DemoMode == 1)"/>
 
-          <do_if value="player.money lt $betInternal">
+          <do_if value="not $isDemo and player.money lt $betInternal">
             <set_value name="$data.$ResultBanner" exact="'Insufficient Credits for this bet!'"/>
             <signal_cue_instantly cue="md.Simple_Menu_API.Refresh_Menu"/>
           </do_if>
           <do_else>
-            <!-- Deduct Bet -->
-            <reward_player money="-$betInternal"/>
+            <!-- Deduct Bet from Player if not Demo Mode -->
+            <do_if value="not $isDemo">
+              <reward_player money="-$betInternal"/>
+              <set_value name="$data.$TotalWagered" exact="$data.$TotalWagered + $betCr"/>
+
+              <!-- If Player-Owned Station: Deposit bet into station trade account -->
+              <do_if value="player.station.exists and player.station.isplayerowned">
+                <reward_player object="player.station" money="$betInternal"/>
+                <do_if value="player.station.$casino_ledger?">
+                  <set_value name="player.station.$casino_ledger.$HouseGrossRevenue" exact="player.station.$casino_ledger.$HouseGrossRevenue + $betCr"/>
+                </do_if>
+              </do_if>
+            </do_if>
+
             <set_value name="$data.$TotalSpins" operation="add"/>
+            <do_if value="player.station.exists and player.station.$casino_ledger?">
+              <set_value name="player.station.$casino_ledger.$SpinsCount" operation="add"/>
+            </do_if>
 
             <!-- Spin Reel 1 -->
             <set_value name="$r1_roll" min="1" max="12"/>
@@ -347,22 +819,94 @@
               <set_value name="$winTitle" exact="'✓ PAIR MATCH! (2x Payout)'"/>
             </do_elseif>
 
-            <!-- Credit Payout -->
-            <do_if value="$multiplier gt 0">
-              <set_value name="$payoutCr" exact="$betCr * $multiplier"/>
-              <set_value name="$payoutInternal" exact="$payoutCr * 100"/>
-              <reward_player money="$payoutInternal"/>
-              <set_value name="$data.$TotalWon" exact="$data.$TotalWon + $payoutCr"/>
-              <set_value name="$data.$ResultBanner" exact="$winTitle + ' Won: ' + $payoutCr + ' Cr!'"/>
+            <!-- Handle Payouts and Ledger -->
+            <do_if value="$isDemo">
+              <!-- Demo Mode / Free-Play Execution -->
+              <do_if value="$multiplier gt 0">
+                <set_value name="$simulatedPayout" exact="$betCr * $multiplier"/>
+                <set_value name="$data.$ResultBanner" exact="'[DEMO] ' + $winTitle + ' Simulated Win: ' + $simulatedPayout + ' Cr'"/>
+              </do_if>
+              <do_else>
+                <set_value name="$data.$ResultBanner" exact="'[DEMO] ' + $winTitle"/>
+              </do_else>
             </do_if>
             <do_else>
-              <set_value name="$data.$ResultBanner" exact="$winTitle + ' Lost: ' + $betCr + ' Cr'"/>
+              <!-- Live Credits Execution -->
+              <do_if value="$multiplier gt 0">
+                <set_value name="$payoutCr" exact="$betCr * $multiplier"/>
+                <set_value name="$payoutInternal" exact="$payoutCr * 100"/>
+                <set_value name="$actualPayoutCr" exact="$payoutCr"/>
+                <set_value name="$isDrained" exact="false"/>
+
+                <!-- If Player-Owned Station: Withdraw payout from station treasury with graceful drain -->
+                <do_if value="player.station.exists and player.station.isplayerowned">
+                  <do_if value="player.station.money ge $payoutInternal">
+                    <reward_player object="player.station" money="-$payoutInternal"/>
+                    <reward_player money="$payoutInternal"/>
+                  </do_if>
+                  <do_else>
+                    <!-- Station treasury drained -->
+                    <set_value name="$drainedInternal" exact="player.station.money"/>
+                    <set_value name="$actualPayoutCr" exact="$drainedInternal / 100"/>
+                    <reward_player object="player.station" money="-$drainedInternal"/>
+                    <reward_player money="$drainedInternal"/>
+                    <set_value name="$isDrained" exact="true"/>
+                  </do_else>
+
+                  <do_if value="player.station.$casino_ledger?">
+                    <set_value name="player.station.$casino_ledger.$HousePayoutsTotal" exact="player.station.$casino_ledger.$HousePayoutsTotal + $actualPayoutCr"/>
+                    <set_value name="player.station.$casino_ledger.$HouseNetIncome" exact="player.station.$casino_ledger.$HouseGrossRevenue - player.station.$casino_ledger.$HousePayoutsTotal"/>
+                  </do_if>
+                </do_if>
+                <do_else>
+                  <!-- NPC Station Payout -->
+                  <reward_player money="$payoutInternal"/>
+                  <do_if value="player.station.exists and player.station.$casino_ledger?">
+                    <set_value name="player.station.$casino_ledger.$HousePayoutsTotal" exact="player.station.$casino_ledger.$HousePayoutsTotal + $payoutCr"/>
+                    <set_value name="player.station.$casino_ledger.$HouseNetIncome" exact="player.station.$casino_ledger.$HouseGrossRevenue - player.station.$casino_ledger.$HousePayoutsTotal"/>
+                  </do_if>
+                </do_else>
+
+                <!-- Update Player Lifetime Stats -->
+                <set_value name="$data.$TotalWon" exact="$data.$TotalWon + $actualPayoutCr"/>
+                <set_value name="$data.$NetProfit" exact="$data.$TotalWon - $data.$TotalWagered"/>
+                <do_if value="$multiplier == 50">
+                  <set_value name="$data.$JackpotsHit" operation="add"/>
+                </do_if>
+
+                <do_if value="$isDrained">
+                  <set_value name="$data.$ResultBanner" exact="'★ JACKPOT! Station treasury drained: Received ' + $actualPayoutCr + ' Cr (Station at 0 Cr) ★'"/>
+                </do_if>
+                <do_else>
+                  <set_value name="$data.$ResultBanner" exact="$winTitle + ' Won: ' + $actualPayoutCr + ' Cr!'"/>
+                </do_else>
+              </do_if>
+              <do_else>
+                <!-- Loss Round -->
+                <set_value name="$data.$NetProfit" exact="$data.$TotalWon - $data.$TotalWagered"/>
+                <do_if value="player.station.exists and player.station.$casino_ledger?">
+                  <set_value name="player.station.$casino_ledger.$HouseNetIncome" exact="player.station.$casino_ledger.$HouseGrossRevenue - player.station.$casino_ledger.$HousePayoutsTotal"/>
+                </do_if>
+                <set_value name="$data.$ResultBanner" exact="$winTitle + ' Lost: ' + $betCr + ' Cr'"/>
+              </do_else>
             </do_else>
 
             <!-- Refresh the menu with updated reels & credits -->
             <signal_cue_instantly cue="md.Simple_Menu_API.Refresh_Menu"/>
           </do_else>
         </do_if>
+      </actions>
+    </cue>
+
+    <!--
+      Clean Menu Closure Callback
+    -->
+    <cue name="On_Menu_Closed" instantiate="true" namespace="this">
+      <conditions>
+        <event_cue_signalled/>
+      </conditions>
+      <actions>
+        <!-- Clean return to first-person view -->
       </actions>
     </cue>
   </cues>
