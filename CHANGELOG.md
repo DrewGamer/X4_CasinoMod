@@ -7,8 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Planned
-- Blackjack engine with splitting, double down, and dealer rules (Task T9).
-- Interactive physical terminal interaction in station bars and lounges.
+- Interactive physical terminal and room interaction for slot machines in station casino modules and bars (Task T8).
 
 ## [v0.1.0-beta] - 2026-08-26
 ### Added

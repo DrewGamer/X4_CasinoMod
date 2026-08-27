@@ -3,8 +3,8 @@
 ## 1. Project Context
 **Project Name:** X4 Foundations Casino Mod (`x4_casino_mod`)
 **Project Type:** Game Mod
-**Current Stage:** Phase 4 - Manual Testing Loop (Scaffolding & Slots PoC)
-**Active Branch:** `feat/scaffolding-and-slots-poc`
+**Current Stage:** Phase 1 - Architecture & Research (Station Physical 'F' Interaction for Slots)
+**Active Branch:** `main`
 **Primary Tech Stack:**
 - **Game Engine Target:** X4: Foundations (Egosoft)
 - **Scripting & Logic:** Lua 5.1 / LuaJIT (Game UI & Core Logic), XML / Mission Director (Game Quests, NPC interactions, Cues)
@@ -13,14 +13,14 @@
 - **Automation:** PowerShell build & test scripts (`scripts/test.ps1`, `scripts/build.ps1`, `scripts/deploy_local.ps1`)
 
 ## 2. Active Goal & Constraints (B8 Attention Anchor)
-**Current Objective:** Human manual verification of test suite (`scripts/test.ps1`) and continuous build artifact (`dist/x4_casino_mod.zip`) before Phase 5 PR creation and release tagging.
+**Current Objective:** Research, architect, and implement physical `F` interaction cues for station casino and bar modules to trigger slot machines in-game (`T8`). Blackjack is deferred from active scope to prioritize physical station integration.
 **Hard Constraints:**
-- MUST pass human checkpoint for architecture approval before starting T1. (APPROVED)
+- MUST pass human checkpoint for architecture approval before starting implementation.
 - MUST pass human checkpoint for branch selection and PR reviews.
 - MUST use `environment-manager` with human authorization for any new dependencies or tool installations.
 - MUST prefer local project installs (`.venv/`, `.tools/`) over global machine installs. Zero global pollution.
 - MUST keep all project artifacts, portable tools, and schemas within `C:\Projects\X4_CasinoMod`.
-- MUST enforce Test-Driven Development (TDD) for all casino game logic (Blackjack, Roulette, Slots, Craps) before UI/MD integration.
+- MUST enforce Test-Driven Development (TDD) for any game logic before UI/MD integration.
 - MUST isolate pure Lua core domain logic from X4 engine APIs to enable sub-second headless unit testing via `luaunit`.
 - MUST validate all XML scripts against Egosoft XSD schemas (`md.xsd`, `content.xsd`) during local test runs.
 - MUST produce a releasable archive at `dist/x4_casino_mod.zip` via `scripts/build.ps1` for `release-packager` and GitHub releases.
@@ -29,7 +29,7 @@
 ## 3. Architecture & Tooling
 **Approved Architecture:**
 Three-tier decoupled mod architecture centered around the vanilla **Casino** and **Gambling Den** station modules (see [.agents/plans/archive/environment-setup-plan.md](file:///C:/Projects/X4_CasinoMod/.agents/plans/archive/environment-setup-plan.md)):
-1. **Core Domain Layer (`lua/casino_core/`)**: Pure Lua 5.1 business logic (card decks, hand evaluators, roulette payout math, RNG state machines, slot reel strips, credit ledger, house edge/rake calculations). 100% unit-tested with `luaunit`.
+1. **Core Domain Layer (`lua/casino_core/`)**: Pure Lua 5.1 business logic (slot reel strips, RNG state machines, credit ledger, payout calculations). 100% unit-tested with `luaunit`.
 2. **UI Adapter Layer (`ui/addons/x4_casino_mod/`)**: Lua UI extensions integrating with kuertee UI Extensions (Nexus 552) and SirNukes Simple Menu API for rendering interactive 2D table overlays, slot displays, and betting controls.
 3. **Mission Director & Game Integration Layer (`md/`, `t/`, `content.xml`)**:
    - Hooks into the vanilla **Casino** and **Gambling Den** interior rooms (and standard Station Bars as a fallback).
@@ -66,8 +66,7 @@ Three-tier decoupled mod architecture centered around the vanilla **Casino** and
 | T5 | Build & Local Deployment Automation Scripts (`scripts/build.ps1`, `scripts/deploy_local.ps1`) | done | xp-developer | T4 |
 | T6 | Feature: 3-Reel Slots Core Engine TDD (Teladi Profit Spinner - PoC) | done | xp-developer | T3, T5 |
 | T7 | Feature: SirNukes Simple Menu Adapter for 3-Reel Slots UI (PoC) | done | xp-developer | T6 |
-| T8 | Feature: Station Casino & Bar Physical 'F' Interaction Cues (`md/CasinoStationCues.xml`) | done | xp-developer | T7 |
-| T9 | Feature: Card Deck Core & Blackjack TDD Implementation (Iteration 2) | pending | xp-developer | T6, T8 |
+| T8 | Feature: Station Casino & Bar Physical 'F' Interaction Cues (`md/CasinoStationCues.xml`) | pending | xp-developer | T7 |
 
 ## 5. Sub-Agent Coordination
 - **Phase 0 & 1**: Plan updated by `xp-architect` and submitted for human checkpoint review.
