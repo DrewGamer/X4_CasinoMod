@@ -28,7 +28,7 @@
 
 ## 3. Architecture & Tooling
 **Approved Architecture:**
-Three-tier decoupled mod architecture centered around the vanilla **Casino** and **Gambling Den** station modules (see [.agents/plans/environment-setup-plan.md](file:///C:/Projects/X4_CasinoMod/.agents/plans/environment-setup-plan.md)):
+Three-tier decoupled mod architecture centered around the vanilla **Casino** and **Gambling Den** station modules (see [.agents/plans/archive/environment-setup-plan.md](file:///C:/Projects/X4_CasinoMod/.agents/plans/archive/environment-setup-plan.md)):
 1. **Core Domain Layer (`lua/casino_core/`)**: Pure Lua 5.1 business logic (card decks, hand evaluators, roulette payout math, RNG state machines, slot reel strips, credit ledger, house edge/rake calculations). 100% unit-tested with `luaunit`.
 2. **UI Adapter Layer (`ui/addons/x4_casino_mod/`)**: Lua UI extensions integrating with kuertee UI Extensions (Nexus 552) and SirNukes Simple Menu API for rendering interactive 2D table overlays, slot displays, and betting controls.
 3. **Mission Director & Game Integration Layer (`md/`, `t/`, `content.xml`)**:

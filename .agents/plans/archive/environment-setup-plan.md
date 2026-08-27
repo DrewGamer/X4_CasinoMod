@@ -1,5 +1,13 @@
 # Environment Setup & Tooling Scaffolding Plan: X4 Foundations Casino Mod
 
+> [!NOTE]
+> **HISTORICAL MILESTONE PLAN (Phase 1 Scaffolding & Initial PoC)**
+> This document is a historical record of the initial environment setup and scaffolding (Task `T0` / Phase 1).
+> For current living architecture, tooling contracts, and active backlog, refer to:
+> - [`README.md`](file:///C:/Projects/X4_CasinoMod/README.md) - Project overview & runtime requirements
+> - [`dependencies/README.md`](file:///C:/Projects/X4_CasinoMod/dependencies/README.md) - External mod integration contracts & APIs
+> - [`.agents/plans/xp-state.md`](file:///C:/Projects/X4_CasinoMod/.agents/plans/xp-state.md) - Active sprint state & work backlog
+
 ## 1. Overview & Architectural Goals
 
 The **X4 Foundations Casino Mod** (`x4_casino_mod`) introduces interactive casino gambling mini-games (e.g., 3-Reel Slots, Blackjack, Roulette, Craps) into *X4: Foundations*.
@@ -47,7 +55,7 @@ C:\Projects\X4_CasinoMod\
 ├── config.local.json.template    # Template for local X4 installation paths
 ├── dependencies/                 # Reference copies / API headers of required mods
 │   ├── kuertee_ui_extensions/    # Nexus Mod 552 reference/mocks
-│   └── sirnukes_mod_support/     # SirNukes APIs reference/mocks
+│   └── sn_mod_support_apis/      # SirNukes APIs reference/mocks
 ├── dist/                         # Packaged mod output & release zip (git-ignored)
 │   ├── x4_casino_mod/            # Uncompressed directory structure
 │   └── x4_casino_mod.zip         # Packaged archive for GitHub Releases
