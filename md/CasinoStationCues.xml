@@ -93,6 +93,37 @@
     </cue>
 
     <!--
+      First-Person Platform Conversation Hooks (NPC 'F' Speaking on Stations)
+    -->
+    <cue name="On_Conversation_Started" instantiate="true" namespace="this">
+      <conditions>
+        <event_conversation_started/>
+      </conditions>
+      <actions>
+        <do_if value="player.station.exists">
+          <add_player_choice text="'[Casino] Play Teladi Profit Spinner'" section="'x4_casino_play_slots'" position="top_right" comment="Direct Slot Machine Launch"/>
+          <add_player_choice text="'[Casino] Game Lobby &amp; Statistics'" section="'x4_casino_open_lobby'" position="bottom_right" comment="Casino Lobby Launch"/>
+        </do_if>
+      </actions>
+    </cue>
+
+    <cue name="On_Conversation_Next_Section" instantiate="true" namespace="this">
+      <conditions>
+        <event_conversation_next_section/>
+      </conditions>
+      <actions>
+        <do_if value="event.param == 'x4_casino_play_slots'">
+          <close_conversation/>
+          <signal_cue_instantly cue="Open_Slots_Direct"/>
+        </do_if>
+        <do_elseif value="event.param == 'x4_casino_open_lobby'">
+          <close_conversation/>
+          <signal_cue_instantly cue="Open_Lobby_Direct"/>
+        </do_elseif>
+      </actions>
+    </cue>
+
+    <!--
       Direct Modal Launcher: Open Casino Game Lobby
     -->
     <cue name="Open_Lobby_Direct" instantiate="true" namespace="this">
