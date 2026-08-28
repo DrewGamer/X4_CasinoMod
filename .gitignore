@@ -2,6 +2,7 @@
 .venv/
 .tools/
 dependencies/
+references/
 *.pyc
 __pycache__/
 
