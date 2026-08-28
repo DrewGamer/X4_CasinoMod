@@ -100,7 +100,7 @@
         <event_conversation_started/>
       </conditions>
       <actions>
-        <do_if value="player.station.exists and player.room? and (player.room.type == roomtype.casino or player.room.type == roomtype.gamblingden or player.room.type == roomtype.bar)">
+        <do_if value="player.station.exists and player.room? and player.room.macro? and (player.room.macro.id.indexof.{'casino'} or player.room.macro.id.indexof.{'gambling'} or player.room.macro.id.indexof.{'bar'})">
           <add_player_choice text="'[Casino] Play Teladi Profit Spinner'" section="'x4_casino_play_slots'" position="top_right" comment="Direct Slot Machine Launch"/>
           <add_player_choice text="'[Casino] Game Lobby &amp; Statistics'" section="'x4_casino_open_lobby'" position="bottom_right" comment="Casino Lobby Launch"/>
         </do_if>
@@ -113,36 +113,34 @@
       </conditions>
       <actions>
         <do_if value="event.param == 'x4_casino_play_slots'">
+          <set_value name="player.entity.$casino_pending_open" exact="'slots'"/>
           <close_conversation/>
-          <signal_cue_instantly cue="Delayed_Open_Slots"/>
         </do_if>
         <do_elseif value="event.param == 'x4_casino_open_lobby'">
+          <set_value name="player.entity.$casino_pending_open" exact="'lobby'"/>
           <close_conversation/>
-          <signal_cue_instantly cue="Delayed_Open_Lobby"/>
         </do_elseif>
       </actions>
     </cue>
 
     <!--
-      Delayed Modal Launchers to allow dialogue camera/screen transition to finish cleanly
+      Listen for conversation completion, then open modal after clean screen release
     -->
-    <cue name="Delayed_Open_Slots" instantiate="true" namespace="this">
+    <cue name="On_Conversation_Finished_Open" instantiate="true" namespace="this">
       <conditions>
-        <event_cue_signalled/>
+        <event_conversation_finished/>
+        <check_value value="player.entity.$casino_pending_open?"/>
       </conditions>
-      <delay exact="150ms"/>
+      <delay exact="100ms"/>
       <actions>
-        <signal_cue_instantly cue="Open_Slots_Direct"/>
-      </actions>
-    </cue>
-
-    <cue name="Delayed_Open_Lobby" instantiate="true" namespace="this">
-      <conditions>
-        <event_cue_signalled/>
-      </conditions>
-      <delay exact="150ms"/>
-      <actions>
-        <signal_cue_instantly cue="Open_Lobby_Direct"/>
+        <set_value name="$target" exact="player.entity.$casino_pending_open"/>
+        <remove_value name="player.entity.$casino_pending_open"/>
+        <do_if value="$target == 'slots'">
+          <signal_cue_instantly cue="Open_Slots_Direct"/>
+        </do_if>
+        <do_elseif value="$target == 'lobby'">
+          <signal_cue_instantly cue="Open_Lobby_Direct"/>
+        </do_elseif>
       </actions>
     </cue>
 
@@ -156,7 +154,7 @@
           <event_cue_signalled cue="md.Setup.GameStart"/>
           <event_game_loaded/>
         </check_any>
-        <check_value value="player.room? and (player.room.type == roomtype.casino or player.room.type == roomtype.gamblingden or player.room.type == roomtype.bar)"/>
+        <check_value value="player.station.exists and player.room? and player.room.macro? and (player.room.macro.id.indexof.{'casino'} or player.room.macro.id.indexof.{'gambling'} or player.room.macro.id.indexof.{'bar'})"/>
       </conditions>
       <actions>
         <do_if value="not player.room.$casino_host? or not player.room.$casino_host.isalive">
