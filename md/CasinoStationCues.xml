@@ -100,7 +100,7 @@
         <event_conversation_started/>
       </conditions>
       <actions>
-        <do_if value="player.station.exists and player.room? and player.room.macro? and (player.room.macro.id.indexof.{'casino'} or player.room.macro.id.indexof.{'gambling'} or player.room.macro.id.indexof.{'bar'})">
+        <do_if value="player.station.exists and ((player.room? and player.room.isclass.room) or (event.object? and event.object.type == entitytype.bartender))">
           <add_player_choice text="'[Casino] Play Teladi Profit Spinner'" section="'x4_casino_play_slots'" position="top_right" comment="Direct Slot Machine Launch"/>
           <add_player_choice text="'[Casino] Game Lobby &amp; Statistics'" section="'x4_casino_open_lobby'" position="bottom_right" comment="Casino Lobby Launch"/>
         </do_if>
@@ -133,12 +133,13 @@
       </conditions>
       <delay exact="100ms"/>
       <actions>
-        <set_value name="$target" exact="player.entity.$casino_pending_open"/>
+        <set_value name="$targetScreen" exact="player.entity.$casino_pending_open"/>
         <remove_value name="player.entity.$casino_pending_open"/>
-        <do_if value="$target == 'slots'">
+        <show_notification text="'[Casino Mod] Opening ' + if ($targetScreen == 'slots') then 'Teladi Profit Spinner' else 'Casino Game Lobby'"/>
+        <do_if value="$targetScreen == 'slots'">
           <signal_cue_instantly cue="Open_Slots_Direct"/>
         </do_if>
-        <do_elseif value="$target == 'lobby'">
+        <do_elseif value="$targetScreen == 'lobby'">
           <signal_cue_instantly cue="Open_Lobby_Direct"/>
         </do_elseif>
       </actions>
@@ -154,7 +155,7 @@
           <event_cue_signalled cue="md.Setup.GameStart"/>
           <event_game_loaded/>
         </check_any>
-        <check_value value="player.station.exists and player.room? and player.room.macro? and (player.room.macro.id.indexof.{'casino'} or player.room.macro.id.indexof.{'gambling'} or player.room.macro.id.indexof.{'bar'})"/>
+        <check_value value="player.station.exists and player.room? and player.room.isclass.room"/>
       </conditions>
       <actions>
         <do_if value="not player.room.$casino_host? or not player.room.$casino_host.isalive">
