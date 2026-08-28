@@ -98,9 +98,9 @@
     <cue name="On_Conversation_Started" instantiate="true" namespace="this">
       <conditions>
         <check_any>
-          <event_conversation_started conversation="default"/>
-          <event_conversation_returned_to_section section="default"/>
-          <event_conversation_next_section section="default"/>
+          <event_conversation_started/>
+          <event_conversation_returned_to_section/>
+          <event_conversation_next_section/>
         </check_any>
         <check_value value="player.station.exists and event.object.isclass.npc and (
           event.object.$is_casino_croupier? or
@@ -139,7 +139,6 @@
         <event_conversation_finished/>
         <check_value value="player.entity.$casino_pending_open?"/>
       </conditions>
-      <delay exact="100ms"/>
       <actions>
         <set_value name="$targetScreen" exact="player.entity.$casino_pending_open"/>
         <remove_value name="player.entity.$casino_pending_open"/>

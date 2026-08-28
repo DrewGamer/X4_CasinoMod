@@ -46,7 +46,7 @@ def validate_against_schema(file_path: Path, schema_path: Path) -> tuple[bool, s
 
 def main() -> int:
     workspace_root = Path(__file__).resolve().parent.parent
-    schemas_dir = workspace_root / "schemas"
+    schemas_dir = workspace_root / "references" / "schemas"
     
     print("=" * 60)
     print("X4 Casino Mod - XML Validation Suite")
