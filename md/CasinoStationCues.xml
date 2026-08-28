@@ -100,7 +100,7 @@
         <event_conversation_started/>
       </conditions>
       <actions>
-        <do_if value="player.station.exists">
+        <do_if value="player.station.exists and player.room? and (player.room.type == roomtype.casino or player.room.type == roomtype.gamblingden or player.room.type == roomtype.bar)">
           <add_player_choice text="'[Casino] Play Teladi Profit Spinner'" section="'x4_casino_play_slots'" position="top_right" comment="Direct Slot Machine Launch"/>
           <add_player_choice text="'[Casino] Game Lobby &amp; Statistics'" section="'x4_casino_open_lobby'" position="bottom_right" comment="Casino Lobby Launch"/>
         </do_if>
@@ -114,12 +114,60 @@
       <actions>
         <do_if value="event.param == 'x4_casino_play_slots'">
           <close_conversation/>
-          <signal_cue_instantly cue="Open_Slots_Direct"/>
+          <signal_cue_instantly cue="Delayed_Open_Slots"/>
         </do_if>
         <do_elseif value="event.param == 'x4_casino_open_lobby'">
           <close_conversation/>
-          <signal_cue_instantly cue="Open_Lobby_Direct"/>
+          <signal_cue_instantly cue="Delayed_Open_Lobby"/>
         </do_elseif>
+      </actions>
+    </cue>
+
+    <!--
+      Delayed Modal Launchers to allow dialogue camera/screen transition to finish cleanly
+    -->
+    <cue name="Delayed_Open_Slots" instantiate="true" namespace="this">
+      <conditions>
+        <event_cue_signalled/>
+      </conditions>
+      <delay exact="150ms"/>
+      <actions>
+        <signal_cue_instantly cue="Open_Slots_Direct"/>
+      </actions>
+    </cue>
+
+    <cue name="Delayed_Open_Lobby" instantiate="true" namespace="this">
+      <conditions>
+        <event_cue_signalled/>
+      </conditions>
+      <delay exact="150ms"/>
+      <actions>
+        <signal_cue_instantly cue="Open_Lobby_Direct"/>
+      </actions>
+    </cue>
+
+    <!--
+      Dedicated Casino Croupier NPC Spawning for Casino, Gambling Den, and Bar rooms
+    -->
+    <cue name="Spawn_Casino_Host_On_Room_Entry" instantiate="true" namespace="this">
+      <conditions>
+        <check_any>
+          <event_object_changed_room object="player.entity"/>
+          <event_cue_signalled cue="md.Setup.GameStart"/>
+          <event_game_loaded/>
+        </check_any>
+        <check_value value="player.room? and (player.room.type == roomtype.casino or player.room.type == roomtype.gamblingden or player.room.type == roomtype.bar)"/>
+      </conditions>
+      <actions>
+        <do_if value="not player.room.$casino_host? or not player.room.$casino_host.isalive">
+          <create_cue_actor cue="this" name="$host">
+            <select race="race.teladi"/>
+            <owner exact="player.station.owner"/>
+          </create_cue_actor>
+          <set_value name="$host.knownname" exact="'Casino Croupier'"/>
+          <add_actor_to_room actor="$host" room="player.room"/>
+          <set_value name="player.room.$casino_host" exact="$host"/>
+        </do_if>
       </actions>
     </cue>
 
