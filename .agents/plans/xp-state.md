@@ -3,8 +3,8 @@
 ## 1. Project Context
 **Project Name:** X4 Foundations Casino Mod (`x4_casino_mod`)
 **Project Type:** Game Mod
-**Current Stage:** Phase 2 - XP Development Loop (Tasks T8.7–T8.12)
-**Active Branch:** `feat/station-physical-interaction` (Commit `e0515ee`)
+**Current Stage:** Phase 4 - Human Verification & In-Game Manual Testing
+**Active Branch:** `feat/station-physical-interaction` (Commit `aeab2c4`)
 **Primary Tech Stack:**
 - **Game Engine Target:** X4: Foundations (Egosoft)
 - **Scripting & Logic:** Lua 5.1 / LuaJIT (Game UI & Core Logic), XML / Mission Director (Game Quests, NPC interactions, Cues)
