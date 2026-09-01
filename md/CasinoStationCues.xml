@@ -60,79 +60,137 @@
     </cue>
 
     <!--
-      Interact Menu Hooks (Direct 'F' Interaction on NPCs and Station Props)
+      ========================================================================
+      2. Dynamic Room Discovery & Fallback Croupier Lifecycle Management
+      ========================================================================
     -->
-    <cue name="Add_Interact_Menu_Actions" instantiate="true" namespace="this">
+    <cue name="On_Player_Room_Changed" instantiate="true" namespace="this">
       <conditions>
-        <event_cue_signalled cue="md.Interact_Menu_API.Get_Actions"/>
+        <check_any>
+          <event_object_changed_room object="player.entity"/>
+          <event_game_loaded/>
+        </check_any>
+        <check_value value="player.station.exists and player.room.exists"/>
       </conditions>
       <actions>
-        <set_value name="$target" exact="event.param.$object"/>
-        <!-- Add Lobby Action to NPCs and station interaction menus -->
-        <signal_cue_instantly
-          cue="md.Interact_Menu_API.Add_Action"
-          param="table[
-            $id         = 'x4_casino_open_lobby',
-            $text       = 'Casino Game Lobby',
-            $icon       = 'order_dock',
-            $section    = 'main',
-            $callback   = Open_Lobby_Direct,
-          ]"/>
+        <set_value name="$isCasinoRoom" exact="false"/>
+        <!-- Tag & RoomType Dynamic Discovery -->
+        <do_if value="player.room.hastag.tag.casino or player.room.hastag.tag.gambling">
+          <set_value name="$isCasinoRoom" exact="true"/>
+        </do_if>
+        <do_else>
+          <find_npc_slot name="$DealerSlots" tags="tag.roulette_dealer" object="player.room" multiple="true"/>
+          <do_if value="$DealerSlots.count gt 0">
+            <set_value name="$isCasinoRoom" exact="true"/>
+          </do_if>
+          <do_elseif value="player.room.roomtype == roomtype.bar and player.station.welfaremodules.count gt 0">
+            <set_value name="$isCasinoRoom" exact="true"/>
+          </do_elseif>
+          <do_elseif value="player.room.macro.ismacro.[macro.room_gen_casino_01_macro, macro.room_gen_bar_01_macro, macro.room_gen_gamblingden_01_macro]">
+            <set_value name="$isCasinoRoom" exact="true"/>
+          </do_elseif>
+        </do_else>
 
-        <!-- Add Direct Slots Action -->
-        <signal_cue_instantly
-          cue="md.Interact_Menu_API.Add_Action"
-          param="table[
-            $id         = 'x4_casino_open_slots',
-            $text       = 'Play Teladi Profit Spinner',
-            $icon       = 'order_dock',
-            $section    = 'main',
-            $callback   = Open_Slots_Direct,
-          ]"/>
+        <!-- Tier 3: Fallback Croupier Spawner (Only if room lacks pre-baked roulette dealer) -->
+        <do_if value="$isCasinoRoom">
+          <find_npc_slot name="$DealerSlots" tags="tag.roulette_dealer" object="player.room" multiple="true"/>
+          <do_if value="$DealerSlots.count == 0 and (not player.room.$casino_host? or not player.room.$casino_host.isalive)">
+            <create_cue_actor cue="this" name="$host">
+              <select race="player.station.owner.primaryrace"/>
+              <owner exact="player.station.owner"/>
+            </create_cue_actor>
+            <set_value name="$host.knownname" exact="'Casino Croupier'"/>
+            <add_actor_to_room actor="$host" room="player.room"/>
+            <set_entity_overrides entity="$host" icon="'pilot'" title="'Casino Croupier'"/>
+            <set_entity_role entity="$host" role="entityrole.service"/>
+            <set_entity_traits entity="$host" customhandler="true"/>
+            <set_value name="$host.$is_casino_croupier" exact="true"/>
+            <set_value name="player.room.$casino_host" exact="$host"/>
+          </do_if>
+        </do_if>
+      </actions>
+    </cue>
+
+    <!-- Clean despawn when player leaves room -->
+    <cue name="On_Player_Left_Room" instantiate="true" namespace="this">
+      <conditions>
+        <event_object_changed_room object="player.entity"/>
+        <check_value value="event.param.exists and event.param.$casino_host?"/>
+      </conditions>
+      <actions>
+        <do_if value="event.param.$casino_host.isalive">
+          <destroy_object object="event.param.$casino_host"/>
+        </do_if>
+        <remove_value name="event.param.$casino_host"/>
       </actions>
     </cue>
 
     <!--
-      First-Person Platform Conversation Hooks (NPC 'F' Speaking on Stations)
+      ========================================================================
+      3. Tier 1 & Tier 3: Table Dealer / Croupier Zero-Click Direct Bypass
+      ========================================================================
     -->
-    <cue name="On_Conversation_Started" instantiate="true" namespace="this">
+    <cue name="On_Dealer_Conversation_Started" instantiate="true" namespace="this">
       <conditions>
         <check_any>
           <event_conversation_started/>
           <event_conversation_returned_to_section/>
-          <event_conversation_next_section/>
         </check_any>
         <check_value value="player.station.exists and event.object.isclass.npc and (
-          event.object.$is_casino_croupier? or
           event.object.$roulette_dealer_slot? or
-          event.object.type == entitytype.bartender or
-          (event.object.room.exists and event.object.room.macro.ismacro.[macro.room_gen_casino_01_macro, macro.room_gen_bar_01_macro, macro.room_gen_gamblingden_01_macro])
+          event.object.$is_casino_croupier? or
+          event.object.name == '{20208,20801}' or
+          event.object.name == '{20208,20802}' or
+          event.object.name == 'Casino Croupier'
         )"/>
       </conditions>
       <actions>
-        <add_player_choice text="'[Casino] Play Teladi Profit Spinner'" section="'x4_casino_play_slots'" position="top_right" comment="Direct Slot Machine Launch"/>
-        <add_player_choice text="'[Casino] Game Lobby &amp; Statistics'" section="'x4_casino_open_lobby'" position="bottom_right" comment="Casino Lobby Launch"/>
-      </actions>
-    </cue>
-
-    <cue name="On_Conversation_Next_Section" instantiate="true" namespace="this">
-      <conditions>
-        <event_conversation_next_section/>
-      </conditions>
-      <actions>
-        <do_if value="event.param == 'x4_casino_play_slots'">
-          <set_value name="player.entity.$casino_pending_open" exact="'slots'"/>
-          <close_conversation/>
-        </do_if>
-        <do_elseif value="event.param == 'x4_casino_open_lobby'">
-          <set_value name="player.entity.$casino_pending_open" exact="'lobby'"/>
-          <close_conversation/>
-        </do_elseif>
+        <!-- Immediate Close: Bypasses 3D Dialogue Overlay Instantly (Frame 0) -->
+        <set_value name="player.entity.$casino_pending_open" exact="'lobby'"/>
+        <close_conversation/>
       </actions>
     </cue>
 
     <!--
-      Listen for conversation completion, then open modal after clean screen release
+      ========================================================================
+      4. Tier 2: Station Bartender Dialogue Hook (Strictly Bartenders Only)
+      ========================================================================
+    -->
+    <cue name="On_Bartender_Conversation_Started" instantiate="true" namespace="this">
+      <conditions>
+        <check_any>
+          <event_conversation_started/>
+          <event_conversation_returned_to_section/>
+        </check_any>
+        <check_value value="player.station.exists and event.object.isclass.npc and (
+          event.object.type == entitytype.bartender or
+          event.object.role == entityrole.bartender
+        )"/>
+      </conditions>
+      <actions>
+        <add_player_choice
+          text="'[Casino] Station Game Lobby'"
+          section="'x4_casino_open_lobby'"
+          position="bottom_right"
+          comment="Diegetic bar interaction choice"/>
+      </actions>
+    </cue>
+
+    <cue name="On_Bartender_Next_Section" instantiate="true" namespace="this">
+      <conditions>
+        <event_conversation_next_section/>
+        <check_value value="event.param == 'x4_casino_open_lobby'"/>
+      </conditions>
+      <actions>
+        <set_value name="player.entity.$casino_pending_open" exact="'lobby'"/>
+        <close_conversation/>
+      </actions>
+    </cue>
+
+    <!--
+      ========================================================================
+      5. Modal Screen Dispatcher
+      ========================================================================
     -->
     <cue name="On_Conversation_Finished_Open" instantiate="true" namespace="this">
       <conditions>
@@ -142,48 +200,12 @@
       <actions>
         <set_value name="$targetScreen" exact="player.entity.$casino_pending_open"/>
         <remove_value name="player.entity.$casino_pending_open"/>
-        <show_notification text="'[Casino Mod] Opening ' + if ($targetScreen == 'slots') then 'Teladi Profit Spinner' else 'Casino Game Lobby'"/>
         <do_if value="$targetScreen == 'slots'">
           <signal_cue_instantly cue="Open_Slots_Direct"/>
         </do_if>
         <do_elseif value="$targetScreen == 'lobby'">
           <signal_cue_instantly cue="Open_Lobby_Direct"/>
         </do_elseif>
-      </actions>
-    </cue>
-
-    <!--
-      Dedicated Casino Croupier NPC Spawning for Casino, Gambling Den, and Bar rooms (Vanilla Grounded)
-    -->
-    <cue name="Spawn_Casino_Host_On_Room_Entry" instantiate="true" namespace="this">
-      <conditions>
-        <check_any>
-          <event_object_changed_room object="player.entity"/>
-          <event_cue_signalled cue="md.Setup.GameStart"/>
-          <event_game_loaded/>
-        </check_any>
-        <check_value value="player.station.exists and player.room.exists and player.room.macro.ismacro.[macro.room_gen_casino_01_macro, macro.room_gen_bar_01_macro, macro.room_gen_gamblingden_01_macro]"/>
-      </conditions>
-      <actions>
-        <do_if value="not player.room.$casino_host? or not player.room.$casino_host.isalive">
-          <find_npc_slot name="$DealerSlots" tags="tag.roulette_dealer" object="player.room" multiple="true"/>
-          <create_cue_actor cue="this" name="$host">
-            <select race="race.teladi"/>
-            <owner exact="player.station.owner"/>
-          </create_cue_actor>
-          <set_value name="$host.knownname" exact="'Casino Croupier'"/>
-          <do_if value="$DealerSlots.count">
-            <add_actor_to_room actor="$host" slot="$DealerSlots.{1}"/>
-          </do_if>
-          <do_else>
-            <add_actor_to_room actor="$host" room="player.room"/>
-          </do_else>
-          <set_entity_overrides entity="$host" icon="'pilot'" title="'Casino Croupier'"/>
-          <set_entity_role entity="$host" role="entityrole.service"/>
-          <set_entity_traits entity="$host" customhandler="true"/>
-          <set_value name="$host.$is_casino_croupier" exact="true"/>
-          <set_value name="player.room.$casino_host" exact="$host"/>
-        </do_if>
       </actions>
     </cue>
 

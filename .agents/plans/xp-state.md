@@ -3,7 +3,7 @@
 ## 1. Project Context
 **Project Name:** X4 Foundations Casino Mod (`x4_casino_mod`)
 **Project Type:** Game Mod
-**Current Stage:** Phase 4 - Human Verification & In-Game Manual Testing
+**Current Stage:** Phase 2 - XP Development Loop (Tasks T8.7–T8.12)
 **Active Branch:** `feat/station-physical-interaction` (Commit `e0515ee`)
 **Primary Tech Stack:**
 - **Game Engine Target:** X4: Foundations (Egosoft)
@@ -73,10 +73,16 @@ Three-tier decoupled mod architecture centered around the vanilla **Casino** and
 | T8.4 | Standalone Modal Menu Launcher & Game Lobby UI (`Simple_Menu_API.Create_Menu`) | done | xp-developer | T8.2 |
 | T8.5 | Station Economy Ledger, Solvency Checks & Owner Free-Play (`$casino_data`, `$casino_ledger`) | done | xp-developer | T8.4 |
 | T8.6 | End-to-End Test Suite, XML Schema Validation, & Dist Packaging | done | xp-developer | T8.5 |
+| T8.7 | Dynamic Room & Dealer Tag Discovery Engine (Room Tags & Roulette Slot Discovery) | done | xp-developer | T8.6 |
+| T8.8 | Vanilla Table Dealer Direct Bypass Cue (`$roulette_dealer_slot` / Frame 0 bypass) | done | xp-developer | T8.7 |
+| T8.9 | Station Bartender Contextual Dialogue Hook (`entitytype.bartender` only) | done | xp-developer | T8.8 |
+| T8.10 | Wandering NPC Dialogue Filter & Cleanup (Preserve 100% vanilla comms on crew) | done | xp-developer | T8.8, T8.9 |
+| T8.11 | Transient Fallback Croupier Spawner & Despawn Guard (with room exit cleanup) | done | xp-developer | T8.7 |
+| T8.12 | End-to-End Validation, Test Automation & Packaging | done | xp-developer | T8.7, T8.8, T8.9, T8.10, T8.11 |
 
 ## 5. Sub-Agent Coordination
-- **Phase 0 & 1**: Plan and Station Interaction Architectural Proposal created by `xp-architect` in [.agents/plans/xp-state.md](file:///C:/Projects/X4_CasinoMod/.agents/plans/xp-state.md) and artifact `station-interior-interaction-architecture.md`, approved via human checkpoint.
-- **Phase 2 Execution**: `xp-developer` executed tasks `T8.1` through `T8.6` on feature branch `feat/station-physical-interaction`.
+- **Phase 0 & 1**: Architectural Blueprint v3 developed by `xp-architect` in [.agents/plans/station-interior-interaction-architecture.md](file:///C:/Projects/X4_CasinoMod/.agents/plans/station-interior-interaction-architecture.md) addressing pure physical immersion, static dealer bypass, bartender dialogue hooks, and crew clutter elimination.
+- **Phase 2 Execution**: `xp-developer` completed tasks `T8.7` through `T8.12` on feature branch `feat/station-physical-interaction`.
 - **Phase 3 Continuous Packaging**: `release-packager` will bundle `dist/x4_casino_mod.zip` and publish to GitHub tag `continuous-build`.
 - **Phase 4 Manual Checkpoint**: Human manual verification of test suite & built artifact.
 - **Phase 5 Release Gate**: PR creation via `gh pr create`, merge to `main`, `CHANGELOG.md` stamp, and SemVer release creation (`v0.2.0-beta`).
@@ -90,7 +96,9 @@ Three-tier decoupled mod architecture centered around the vanilla **Casino** and
 - [x] Phase 3 Continuous Build Packaged & Uploaded (`dist/x4_casino_mod.zip`)
 - [x] Phase 4 Manual Verification Passed
 - [x] Phase 5 Released & Tagged (`v0.1.0-beta`)
-- [x] Phase 2 Station Physical Interactions & Multi-Game Dispatcher Implemented (T8.1–T8.6)
+- [x] Phase 2 Station Physical Interactions Initial Implementation (T8.1–T8.6)
+- [x] Phase 1 Architecture Blueprint v3 Approval (Static Dealer Hooking & Conversation Bypass)
+- [x] Phase 2 Station Physical Immersion Implementation Complete (T8.7–T8.12)
 
 ## 7. Release Configuration
 **Continuous Release Tag:** continuous-build
