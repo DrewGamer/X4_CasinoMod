@@ -91,23 +91,53 @@
           </do_elseif>
         </do_else>
 
-        <!-- Tier 3: Fallback Croupier Spawner (Only if room lacks pre-baked roulette dealer) -->
-        <do_if value="$isCasinoRoom">
-          <find_npc_slot name="$DealerSlots" tags="tag.roulette_dealer" object="player.room" multiple="true"/>
-          <do_if value="$DealerSlots.count == 0 and (not player.room.$casino_host? or not player.room.$casino_host.isalive)">
-            <create_cue_actor cue="this" name="$host">
-              <select race="player.station.owner.primaryrace"/>
-              <owner exact="player.station.owner"/>
-            </create_cue_actor>
-            <set_value name="$host.knownname" exact="'Casino Croupier'"/>
-            <add_actor_to_room actor="$host" room="player.room"/>
-            <set_entity_overrides entity="$host" icon="'pilot'" title="'Casino Croupier'"/>
-            <set_entity_role entity="$host" role="entityrole.service"/>
-            <set_entity_traits entity="$host" customhandler="true"/>
-            <set_value name="$host.$is_casino_croupier" exact="true"/>
-            <set_value name="player.room.$casino_host" exact="$host"/>
+        <!-- Register all existing dealers/croupiers in the room -->
+        <find_object_component name="$RoomNPCs" object="player.room" class="class.npc" multiple="true"/>
+        <set_value name="$foundDealer" exact="false"/>
+        <do_for_each name="$npc" in="$RoomNPCs">
+          <do_if value="$npc.$roulette_dealer_slot? or $npc.$is_casino_croupier? or $npc.name == '{20208,20801}' or $npc.name == '{20208,20802}' or $npc.name == 'Casino Croupier'">
+            <signal_cue_instantly cue="Register_Dealer_Handler" param="$npc"/>
+            <set_value name="$foundDealer" exact="true"/>
           </do_if>
+          <do_elseif value="$isCasinoRoom and $npc.role == entityrole.service">
+            <!-- Service role NPC stationed in casino room -->
+            <signal_cue_instantly cue="Register_Dealer_Handler" param="$npc"/>
+            <set_value name="$foundDealer" exact="true"/>
+          </do_elseif>
+        </do_for_each>
+
+        <!-- Tier 3: Fallback Croupier Spawner (Only if casino room lacks any dealer/host) -->
+        <do_if value="$isCasinoRoom and not $foundDealer and (not player.room.$casino_host? or not player.room.$casino_host.isalive)">
+          <create_cue_actor cue="this" name="$host">
+            <select race="player.station.owner.primaryrace"/>
+            <owner exact="player.station.owner"/>
+          </create_cue_actor>
+          <set_value name="$host.knownname" exact="'Casino Croupier'"/>
+          <add_actor_to_room actor="$host" room="player.room"/>
+          <set_entity_overrides entity="$host" icon="'pilot'" title="'Casino Croupier'"/>
+          <set_entity_role entity="$host" role="entityrole.service"/>
+          <set_entity_traits entity="$host" customhandler="true"/>
+          <set_value name="$host.$is_casino_croupier" exact="true"/>
+          <set_value name="player.room.$casino_host" exact="$host"/>
+          <signal_cue_instantly cue="Register_Dealer_Handler" param="$host"/>
         </do_if>
+      </actions>
+    </cue>
+
+    <!-- Platform Actor Creation Hook: Immediately bind new dealer NPCs -->
+    <cue name="On_Platform_Actor_Created" instantiate="true" namespace="this">
+      <conditions>
+        <event_platform_actor_created/>
+        <check_value value="event.param.isclass.npc and (
+          event.param.$roulette_dealer_slot? or
+          event.param.$is_casino_croupier? or
+          event.param.name == '{20208,20801}' or
+          event.param.name == '{20208,20802}' or
+          event.param.name == 'Casino Croupier'
+        )"/>
+      </conditions>
+      <actions>
+        <signal_cue_instantly cue="Register_Dealer_Handler" param="event.param"/>
       </actions>
     </cue>
 
@@ -127,28 +157,42 @@
 
     <!--
       ========================================================================
-      3. Tier 1 & Tier 3: Table Dealer / Croupier Zero-Click Direct Bypass
+      3. Tier 1 & Tier 3: Actor-Bound Dealer Handler (Zero-Click Direct Bypass)
       ========================================================================
     -->
-    <cue name="On_Dealer_Conversation_Started" instantiate="true" namespace="this">
+    <cue name="Register_Dealer_Handler" instantiate="true" namespace="this">
       <conditions>
-        <check_any>
-          <event_conversation_started/>
-          <event_conversation_returned_to_section/>
-        </check_any>
-        <check_value value="player.station.exists and event.object.isclass.npc and (
-          event.object.$roulette_dealer_slot? or
-          event.object.$is_casino_croupier? or
-          event.object.name == '{20208,20801}' or
-          event.object.name == '{20208,20802}' or
-          event.object.name == 'Casino Croupier'
-        )"/>
+        <event_cue_signalled/>
+        <check_value value="event.param.isclass.npc"/>
       </conditions>
       <actions>
-        <!-- Immediate Close: Bypasses 3D Dialogue Overlay Instantly (Frame 0) -->
-        <set_value name="player.entity.$casino_pending_open" exact="'lobby'"/>
-        <close_conversation/>
+        <set_value name="$actor" exact="event.param"/>
+        <set_entity_traits entity="$actor" customhandler="true"/>
       </actions>
+      <cues>
+        <cue name="Dealer_Actor_Destroyed">
+          <conditions>
+            <event_object_destroyed object="$actor"/>
+          </conditions>
+          <actions>
+            <cancel_cue cue="parent"/>
+          </actions>
+        </cue>
+
+        <cue name="Dealer_Comm_Started" instantiate="true">
+          <conditions>
+            <check_any>
+              <event_conversation_started actor="$actor"/>
+              <event_conversation_returned_to_section actor="$actor"/>
+            </check_any>
+          </conditions>
+          <actions>
+            <!-- Immediate Close: Bypasses 3D Dialogue Overlay Instantly (Frame 0) -->
+            <set_value name="player.entity.$casino_pending_open" exact="'lobby'"/>
+            <close_conversation/>
+          </actions>
+        </cue>
+      </cues>
     </cue>
 
     <!--
@@ -178,8 +222,7 @@
 
     <cue name="On_Bartender_Next_Section" instantiate="true" namespace="this">
       <conditions>
-        <event_conversation_next_section/>
-        <check_value value="event.param == 'x4_casino_open_lobby'"/>
+        <event_conversation_next_section section="'x4_casino_open_lobby'"/>
       </conditions>
       <actions>
         <set_value name="player.entity.$casino_pending_open" exact="'lobby'"/>
