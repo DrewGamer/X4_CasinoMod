@@ -1,4 +1,4 @@
-# Architectural Blueprint (v3): Station Physical Immersion & NPC Interaction Engine
+# Architectural Blueprint (v4): Slot Dealer Direct Hooking, Standalone Widget Updates & Immersion Polish
 
 **Branch**: `feat/station-physical-interaction`  
 **Author**: Lead Systems Architect (`xp-architect`)  
@@ -442,3 +442,25 @@ stateDiagram-v2
 | **T8.10** | **Wandering NPC Dialogue Filter & Cleanup**<br>Ensure all random crew, pilots, and captains walking through the station bar/casino receive zero casino choices and retain 100% vanilla dialogue. | T8.8, T8.9 | Wandering crew members do not display any casino menu options when spoken to. |
 | **T8.11** | **Transient Fallback Croupier Spawner & Despawn Guard**<br>Spawn a race-matched croupier in casino rooms lacking dealer slots, and register `On_Player_Left_Room` cleanup. | T8.7 | Casino rooms without pre-baked slots spawn an interactable croupier; entity is cleanly destroyed when player exits the room. |
 | **T8.12** | **End-to-End Validation, Test Automation & Packaging**<br>Run full test suite (`test.ps1`), XML schema validation, and package continuous build artifact. | T8.7-T8.11 | All unit tests & XML schemas pass; package created at `dist/x4_casino_mod.zip`. |
+| **T8.13** | **Slot Actor Discovery & Busy Flag Suppression**<br>Query `$slot.component.slotactor.{$slot}` from `$DealerSlots`, apply `set_entity_traits busy="false" customhandler="true"`, and remove the wandering service crew match (`entityrole.service`). | T8.12 | Static roulette table dealers show `'[F] Speak'`, wandering crewwomen/captains retain 100% vanilla dialogue, and fallback croupier spawns only when no dealer slot exists. |
+| **T8.14** | **Standalone UI Live Widget Update Pipeline**<br>Implement `Update_Slots_UI` helper cue calling `md.Simple_Menu_API.Update_Widget` for `txt_header`, `box_reel1`, `box_reel2`, `box_reel3`, `txt_banner`, and `btn_toggle_demo`. Wire all bet changes and spins to this cue. | T8.13 | Clicking bet buttons, toggling demo mode, or clicking SPIN immediately updates reels, balance, banner, and buttons in real time without closing the menu. |
+| **T8.15** | **Savegame Schema Defense & Blackboard Null Migration**<br>Add safe defaulting in `Init_Casino_State` and `Build_Lobby_Menu` for legacy savegame tables lacking `$JackpotsHit` or other tracking keys. | T8.12 | Loading older saves displays `Jackpots: 0` instead of `Jackpots: null`. |
+| **T8.16** | **ASCII Typography Sanitization**<br>Replace all unsupported Unicode glyphs across `md/CasinoStationCues.xml` with standard ASCII equivalents (`***`, `>>>`, `[+]`, `===`). | T8.14 | In-game UI displays clean, crisp text with 0 `?` rendering artifacts. |
+| **T8.17** | **Phase 4 Regression Verification & Continuous Re-Packaging**<br>Run full test harness (`scripts/test.ps1`), validate XML schemas, and package continuous build artifact at `dist/x4_casino_mod.zip`. | T8.13-T8.16 | Sub-second tests and XML validation pass; releasable artifact produced for manual verification. |
+
+---
+
+## 7. Blueprint v4 Defect Resolution & Standalone Reactivity
+
+### 7.1 Standalone Menu In-Place Widget Updates
+In SirNukes Simple Menu API, standalone menus (`Create_Menu`) do not support full-page redrawing via `Refresh_Menu`. To make the slot machine responsive to bets and spins in real time, all updates must use `md.Simple_Menu_API.Update_Widget` with explicit IDs:
+- `txt_header`: updates balance and bet text in-place
+- `box_reel1`, `box_reel2`, `box_reel3`: updates reel box text in-place
+- `txt_banner`: updates payout message in-place
+- `btn_toggle_demo`: updates demo mode button text in-place
+
+### 7.2 Static Table Dealer Unsuppression
+Egosoft's `STATE_roulette_dealer` sets `type="'busy'"`, suppressing player comms. To make static dealers interactable:
+1. Locate dealer via `$slot.component.slotactor.{$slot}`.
+2. Clear busy and attach handler: `<set_entity_traits entity="$dealer" customhandler="true" busy="false"/>`.
+3. Remove generic `entityrole.service` scanning to guarantee wandering crew retain 100% vanilla comms.
