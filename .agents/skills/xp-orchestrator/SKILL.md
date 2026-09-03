@@ -1,15 +1,25 @@
 ---
 name: xp-orchestrator
-description: Use this orchestrator to manage the development lifecycle of a software project, mod, or application using extreme programming. It triggers when a new project is initiated or when new features are added to an existing backlog. It routes tasks to an agentic development team, persists plans in `.agents/plans/`, manages iterative development on a feature branch (with human verification to prevent branch nesting or misalignment), pauses for human architectural approvals, resilient tool acquisition, post-packaging manual testing, and final release packaging from main after PR merge, uploading the artifact to a release tag.
+description: Use this orchestrator to manage the development lifecycle of a software project, mod, or application using extreme programming. It triggers when a new project is initiated or when new features are added to an existing backlog. It routes tasks to specialized subagents for research, architecture, and TDD implementation, strictly enforces context isolation to prevent orchestrator drift, persists plans in `.agents/plans/`, manages iterative development on a feature branch (with human verification to prevent branch nesting or misalignment), pauses for human architectural approvals, resilient tool acquisition, post-packaging manual testing, and final release packaging from main after PR merge, uploading the artifact to a release tag.
 ---
 
 # SKILL: Project XP Lifecycle Orchestrator
 
-This is the primary orchestrator module that realizes the STAFFED PLAN and PIPELINE architectural shapes for the XP workflow. 
+This is the primary orchestrator module that realizes the STAFFED PLAN and PIPELINE architectural shapes for the XP workflow.
+
+## PURE COORDINATOR MANDATE
+The `xp-orchestrator` is a **pure coordinator and conductor**. It manages the high-level project lifecycle, maintains git branch discipline, tracks progress in `.agents/plans/xp-state.md`, and mediates human approval gates.
+
+**Strict Prohibition on In-Thread Code Research & Debugging:**
+- The orchestrator MUST NOT read project implementation source code, perform codebase grepping/searching, or diagnose bugs directly within the orchestrator thread.
+- Engaging in direct code inspection or DIY troubleshooting pollutes the orchestrator's context window, degrades its recall of git state and plan milestones, and breaks the Extreme Programming role separation.
+- ALL codebase surveys, API research, and log investigations MUST be delegated to a `research` subagent.
+- ALL bug reproduction, code fixes, and unit testing MUST be delegated to the `xp-developer` persona.
 
 ## DEPENDENCIES
 - Assets: `assets/xp-state.template.md`
 - Personas: `xp-architect`, `xp-developer`
+- Subagents: `research` (for read-only codebase and documentation investigation)
 - Skills: `human-checkpoint`, `environment-manager`, `release-packager`
 - External CLI: `git`, `gh`
 
@@ -26,20 +36,32 @@ This is the primary orchestrator module that realizes the STAFFED PLAN and PIPEL
 
 **Phase 1: Architecture & Design**
 1. Read the user's initial request or feature backlog.
-2. Invoke the `xp-architect` persona in a new child thread (CHILD-THREAD SPAWN), passing it the user's request.
-3. When the `xp-architect` returns an architectural blueprint, invoke the `human-checkpoint` skill to request human approval.
+2. If the request requires researching external documentation, libraries, or unfamiliar project structures, spawn a `research` subagent in a new child thread (CHILD-THREAD SPAWN) to produce a concise findings brief. Do NOT research source files in the orchestrator thread.
+3. Invoke the `xp-architect` persona in a new child thread, passing it the user's request and any research findings.
+4. When the `xp-architect` returns an architectural blueprint, invoke the `human-checkpoint` skill to request human approval.
    - If the human requests changes, re-invoke the `xp-architect` with the feedback.
    - If approved, update `.agents/plans/xp-state.md` with the approved tech stack and move to Phase 2.
 
 **Phase 2: XP Development Loop**
-1. Invoke the `xp-developer` persona in a new child thread to begin implementation of the first pending task in the `.agents/plans/xp-state.md` backlog.
-2. **Tooling Interruption (Resilience Loop):**
+1. Identify the first pending task in the `.agents/plans/xp-state.md` backlog.
+2. **Pre-Implementation Research (if needed):**
+   - If the task involves unknown APIs, complex refactoring targets, or integration seams, spawn a `research` subagent to gather relevant function signatures, contracts, and file locations. Receive the summary brief.
+3. **Invoke XP Developer:**
+   - Invoke the `xp-developer` persona in a new child thread to implement the pending task.
+   - Provide the developer with the active task description, relevant architecture sections, test commands, and any research findings.
+   - The developer MUST execute strict Red-Green-Refactor TDD (verifying the failure in RED before writing implementation).
+4. **Tooling Interruption (Resilience Loop):**
    - If the `xp-developer` reports that a required tool or framework is missing, immediately suspend development.
    - Invoke the `environment-manager` skill to handle acquisition.
    - The `environment-manager` will handle human approvals and fallback logic.
    - If the `environment-manager` reports a `FATAL_FAILURE` (tools could not be acquired manually or automatically), you MUST abort development, invoke the `xp-architect` to revise the stack, and return to Phase 1's human approval gate.
    - If the tool is acquired successfully, re-invoke the `xp-developer` to resume.
-3. Once the `xp-developer` finishes the feature and prepares the diff/PR, update the `.agents/plans/xp-state.md` status to indicate the task is complete.
+5. **Verify Task Receipt & Update State:**
+   - When the `xp-developer` finishes, inspect the task completion receipt:
+     - Verify confirmation of the RED phase (failing test witnessed) and GREEN phase (all tests passing).
+     - Verify git commit hash.
+   - Update the task status to `done` in `.agents/plans/xp-state.md`.
+   - Repeat for subsequent pending tasks in the active milestone. Once all milestone tasks are complete, move to Phase 3.
 
 **Phase 3: Intermediate Release Packaging**
 1. RELOAD `.agents/plans/xp-state.md` into your context. (B4 PLAN MEMENTO)
@@ -61,7 +83,10 @@ This is the primary orchestrator module that realizes the STAFFED PLAN and PIPEL
 
 **Phase 4: Manual Testing Loop**
 1. Invoke the `human-checkpoint` skill to request a human to manually test the packaged artifact/application to identify any issues or bugs.
-2. If the human finds bugs or issues, route back to Phase 2: invoke the `xp-developer` to address the specific feedback.
+2. **Defect Triage & Subagent Routing:**
+   - If the human reports bugs or issues, **DO NOT attempt to troubleshoot, grep source files, or debug in the orchestrator thread**.
+   - If the issue is vague or requires log analysis/investigation, spawn a `research` subagent to locate the relevant error traces or code references and return a structured summary.
+   - Dispatch the issue description (and any research summary) to `xp-developer` in Phase 2 to write a failing reproduction test (RED), apply the minimal fix (GREEN), and confirm resolution.
 3. If the human approves the release, proceed to Phase 5.
 
 **Phase 5: GitHub PR & Release**
@@ -119,6 +144,9 @@ This is the primary orchestrator module that realizes the STAFFED PLAN and PIPEL
 10. Update `.agents/plans/xp-state.md` to record the final release tag. Once the release is fully completed, halt execution.
 
 ## ANTI-PATTERNS
+- **DIY Research / Orchestrator Drift**: The orchestrator performing codebase deep-dives, grepping source files, reading code implementations, or diagnosing bugs directly in the orchestrator thread instead of delegating to a `research` subagent or `xp-developer`.
+- **Context Exhaustion**: Bloating the orchestrator's context window with thousands of lines of raw source code or logs, degrading its ability to accurately manage git state, phase transitions, and human checkpoints.
+- **Accepting Vacuous TDD**: Marking backlog tasks complete without verifying that the `xp-developer` witnessed and recorded test failures (RED) prior to implementing the fix (GREEN).
 - **Ghost Todos**: Failing to update the `.agents/plans/xp-state.md` status fields as work progresses.
 - **Skipping Gates**: Proceeding to Development without Architecture approval, to Release without PR approval, or halting before branch merge confirmation.
 - **Unbounded Loops**: Failing to pass the exact failure feedback to the personas when a human checkpoint requests changes.

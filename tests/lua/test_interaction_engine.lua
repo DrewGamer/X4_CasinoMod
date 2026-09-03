@@ -136,6 +136,28 @@ function InteractionEngine.handle_room_entry(room, station)
     local is_casino = InteractionEngine.is_casino_room(room, station)
     if is_casino then
         local has_dealer_slots = (room.dealer_slots and #room.dealer_slots > 0)
+        local registered_dealers = {}
+
+        if has_dealer_slots then
+            for _, slot in ipairs(room.dealer_slots) do
+                local dealer = nil
+                if slot.component and slot.component.slotactor and slot.component.slotactor[slot] then
+                    dealer = slot.component.slotactor[slot]
+                elseif slot.slotactor then
+                    dealer = slot.slotactor
+                end
+
+                if dealer then
+                    dealer.busy = false
+                    dealer.customhandler = true
+                    table.insert(registered_dealers, dealer)
+                end
+            end
+            if #registered_dealers > 0 then
+                return registered_dealers
+            end
+        end
+
         if not has_dealer_slots and (not room.casino_host or not room.casino_host.is_alive) then
             local host = {
                 knownname = "Casino Croupier",
@@ -143,6 +165,7 @@ function InteractionEngine.handle_room_entry(room, station)
                 race = (station.owner and station.owner.primaryrace) or "teladi",
                 role = "service",
                 customhandler = true,
+                busy = false,
                 is_casino_croupier = true,
                 is_alive = true
             }
@@ -399,7 +422,77 @@ function TestInteractionEngine.test_transient_croupier_race_matching()
     luaunit.assertEquals(host.race, "boron", "Croupier should match station owner primary race")
 end
 
+function TestInteractionEngine:test_slot_actor_retrieval_and_unsuppression()
+    local dealer_actor = {
+        name = "Table Dealer",
+        entity_role = "service",
+        busy = true,
+        customhandler = false,
+        has_roulette_dealer_slot = true
+    }
+    local slot = {
+        id = "slot_roulette_dealer_01",
+        tag = "tag.roulette_dealer"
+    }
+    slot.component = {
+        slotactor = {
+            [slot] = dealer_actor
+        }
+    }
+    local room = {
+        dealer_slots = { slot },
+        tags = { casino = true }
+    }
+
+    local result = InteractionEngine.handle_room_entry(room, self.station)
+    luaunit.assertNotNil(result, "Room entry should return or register slot dealers")
+    luaunit.assertEquals(dealer_actor.busy, false, "Roulette table dealer busy flag must be cleared (false)")
+    luaunit.assertTrue(dealer_actor.customhandler, "Roulette table dealer customhandler trait must be true")
+    luaunit.assertNil(room.casino_host, "Fallback croupier must not spawn when dealer slots exist")
+end
+
+function TestInteractionEngine:test_wandering_service_crew_not_registered_as_dealer()
+    local wandering_service_npc = {
+        name = "Service Crew Member",
+        entity_type = "service",
+        entity_role = "service",
+        busy = false,
+        customhandler = false
+    }
+
+    -- Verify wandering crew is classified strictly as vanilla_only
+    local classification = InteractionEngine.classify_npc_interaction(wandering_service_npc, self.station)
+    luaunit.assertEquals(classification, "vanilla_only", "Generic service crew must NOT be classified as dealer_bypass")
+    luaunit.assertFalse(wandering_service_npc.customhandler, "Generic service crew must retain customhandler = false")
+end
+
+function TestInteractionEngine.test_dealer_xml_cue_contract_slotactor_and_busy_false()
+    local f = io.open("md/CasinoStationCues.xml", "r")
+    luaunit.assertNotNil(f, "md/CasinoStationCues.xml should exist and be readable")
+    local content = f:read("*a")
+    f:close()
+
+    -- 1. Must query $slot.component.slotactor.{$slot}
+    luaunit.assertTrue(
+        content:find("$slot.component.slotactor.{$slot}", 1, true) ~= nil,
+        "md/CasinoStationCues.xml must retrieve dealer entity via $slot.component.slotactor.{$slot}"
+    )
+
+    -- 2. Must set busy='false' and customhandler='true' on dealer
+    luaunit.assertTrue(
+        content:find('busy="false"', 1, true) ~= nil,
+        "md/CasinoStationCues.xml must suppress busy flag using busy=\"false\""
+    )
+
+    -- 3. Must NOT scan generic entityrole.service to hook dealers
+    luaunit.assertFalse(
+        content:find("$npc.role == entityrole.service", 1, true) ~= nil,
+        "md/CasinoStationCues.xml must NOT treat generic entityrole.service as dealers"
+    )
+end
+
 _G.TestInteractionEngine = TestInteractionEngine
 
 local runner = luaunit.LuaUnit.new()
 os.exit(runner:runSuite())
+

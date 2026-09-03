@@ -74,40 +74,32 @@
       </conditions>
       <actions>
         <set_value name="$isCasinoRoom" exact="false"/>
+        <find_npc_slot name="$DealerSlots" tags="tag.roulette_dealer" object="player.room" multiple="true"/>
         <!-- Tag & RoomType Dynamic Discovery -->
         <do_if value="player.room.hastag.tag.casino or player.room.hastag.tag.gambling">
           <set_value name="$isCasinoRoom" exact="true"/>
         </do_if>
-        <do_else>
-          <find_npc_slot name="$DealerSlots" tags="tag.roulette_dealer" object="player.room" multiple="true"/>
-          <do_if value="$DealerSlots.count gt 0">
-            <set_value name="$isCasinoRoom" exact="true"/>
-          </do_if>
-          <do_elseif value="player.room.roomtype == roomtype.bar and player.station.welfaremodules.count gt 0">
-            <set_value name="$isCasinoRoom" exact="true"/>
-          </do_elseif>
-          <do_elseif value="player.room.macro.ismacro.[macro.room_gen_casino_01_macro, macro.room_gen_bar_01_macro, macro.room_gen_gamblingden_01_macro]">
-            <set_value name="$isCasinoRoom" exact="true"/>
-          </do_elseif>
-        </do_else>
+        <do_elseif value="$DealerSlots.count gt 0">
+          <set_value name="$isCasinoRoom" exact="true"/>
+        </do_elseif>
+        <do_elseif value="player.room.roomtype == roomtype.bar and player.station.welfaremodules.count gt 0">
+          <set_value name="$isCasinoRoom" exact="true"/>
+        </do_elseif>
+        <do_elseif value="player.room.macro.ismacro.[macro.room_gen_casino_01_macro, macro.room_gen_bar_01_macro, macro.room_gen_gamblingden_01_macro]">
+          <set_value name="$isCasinoRoom" exact="true"/>
+        </do_elseif>
 
-        <!-- Register all existing dealers/croupiers in the room -->
-        <find_object_component name="$RoomNPCs" object="player.room" class="class.npc" multiple="true"/>
-        <set_value name="$foundDealer" exact="false"/>
-        <do_for_each name="$npc" in="$RoomNPCs">
-          <do_if value="$npc.$roulette_dealer_slot? or $npc.$is_casino_croupier? or $npc.name == '{20208,20801}' or $npc.name == '{20208,20802}' or $npc.name == 'Casino Croupier'">
-            <signal_cue_instantly cue="Register_Dealer_Handler" param="$npc"/>
-            <set_value name="$foundDealer" exact="true"/>
+        <!-- Tier 1: Slot Actor Discovery & Busy Flag Suppression for Roulette Dealers -->
+        <do_for_each name="$slot" in="$DealerSlots">
+          <do_if value="$slot.component.slotactor.{$slot}">
+            <set_value name="$dealer" exact="$slot.component.slotactor.{$slot}"/>
+            <set_entity_traits entity="$dealer" customhandler="true" busy="false"/>
+            <signal_cue_instantly cue="Register_Dealer_Handler" param="$dealer"/>
           </do_if>
-          <do_elseif value="$isCasinoRoom and $npc.role == entityrole.service">
-            <!-- Service role NPC stationed in casino room -->
-            <signal_cue_instantly cue="Register_Dealer_Handler" param="$npc"/>
-            <set_value name="$foundDealer" exact="true"/>
-          </do_elseif>
         </do_for_each>
 
-        <!-- Tier 3: Fallback Croupier Spawner (Only if casino room lacks any dealer/host) -->
-        <do_if value="$isCasinoRoom and not $foundDealer and (not player.room.$casino_host? or not player.room.$casino_host.isalive)">
+        <!-- Tier 3: Fallback Croupier Spawner (Only if casino room lacks any dealer slots and no existing alive host exists) -->
+        <do_if value="$isCasinoRoom and $DealerSlots.count == 0 and (not player.room.$casino_host? or not player.room.$casino_host.isalive)">
           <create_cue_actor cue="this" name="$host">
             <select race="player.station.owner.primaryrace"/>
             <owner exact="player.station.owner"/>
@@ -116,11 +108,15 @@
           <add_actor_to_room actor="$host" room="player.room"/>
           <set_entity_overrides entity="$host" icon="'pilot'" title="'Casino Croupier'"/>
           <set_entity_role entity="$host" role="entityrole.service"/>
-          <set_entity_traits entity="$host" customhandler="true"/>
+          <set_entity_traits entity="$host" customhandler="true" busy="false"/>
           <set_value name="$host.$is_casino_croupier" exact="true"/>
           <set_value name="player.room.$casino_host" exact="$host"/>
           <signal_cue_instantly cue="Register_Dealer_Handler" param="$host"/>
         </do_if>
+        <do_elseif value="$isCasinoRoom and $DealerSlots.count == 0 and player.room.$casino_host? and player.room.$casino_host.isalive">
+          <set_entity_traits entity="player.room.$casino_host" customhandler="true" busy="false"/>
+          <signal_cue_instantly cue="Register_Dealer_Handler" param="player.room.$casino_host"/>
+        </do_elseif>
       </actions>
     </cue>
 
@@ -137,6 +133,7 @@
         )"/>
       </conditions>
       <actions>
+        <set_entity_traits entity="event.param" customhandler="true" busy="false"/>
         <signal_cue_instantly cue="Register_Dealer_Handler" param="event.param"/>
       </actions>
     </cue>
@@ -167,7 +164,7 @@
       </conditions>
       <actions>
         <set_value name="$actor" exact="event.param"/>
-        <set_entity_traits entity="$actor" customhandler="true"/>
+        <set_entity_traits entity="$actor" customhandler="true" busy="false"/>
       </actions>
       <cues>
         <cue name="Dealer_Actor_Destroyed">

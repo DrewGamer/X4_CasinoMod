@@ -79,7 +79,7 @@ Three-tier decoupled mod architecture centered around the vanilla **Casino** and
 | T8.10 | Wandering NPC Dialogue Filter & Cleanup (Preserve 100% vanilla comms on crew) | done | xp-developer | T8.8, T8.9 |
 | T8.11 | Transient Fallback Croupier Spawner & Despawn Guard (with room exit cleanup) | done | xp-developer | T8.7 |
 | T8.12 | End-to-End Validation, Test Automation & Packaging | done | xp-developer | T8.7, T8.8, T8.9, T8.10, T8.11 |
-| T8.13 | Slot Actor Direct Hooking & Busy Flag Suppression (`$slot.component.slotactor.{$slot}`, `busy="false"`) | pending | xp-developer | T8.12 |
+| T8.13 | Slot Actor Direct Hooking & Busy Flag Suppression (`$slot.component.slotactor.{$slot}`, `busy="false"`) | done | xp-developer | T8.12 |
 | T8.14 | Standalone UI Live Widget Update Pipeline (`md.Simple_Menu_API.Update_Widget`) | pending | xp-developer | T8.13 |
 | T8.15 | Savegame Schema Defense & Blackboard Null Migration (`not $JackpotsHit?`) | pending | xp-developer | T8.12 |
 | T8.16 | ASCII Typography Sanitization (Eliminate `?` glyph rendering artifacts) | pending | xp-developer | T8.14 |
