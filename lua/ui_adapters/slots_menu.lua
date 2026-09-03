@@ -21,6 +21,14 @@ local SYMBOL_NAMES = {
     energy_cells  = "Energy Cells"
 }
 
+local SYMBOL_BOX_NAMES = {
+    teladi_profit = "[ PROFIT! ]",
+    nividium      = "[ NIVIDIUM]",
+    silicon       = "[ SILICON ]",
+    ore           = "[   ORE   ]",
+    energy_cells  = "[ E-CELLS ]"
+}
+
 --- Create a new SlotsMenu adapter
 -- @param engine Optional Slots domain engine instance
 -- @return SlotsMenu object
@@ -229,6 +237,124 @@ function SlotsMenu:generate_table_data()
         id = "x4_casino_slots_menu",
         title = "Teladi Profit Spinner",
         rows = rows
+    }
+end
+
+--- Generate live widget update payload for SirNukes Simple Menu API (Update_Widget)
+-- @param state Optional table overriding or providing state
+-- @return Map of widget update tables keyed by widget id
+function SlotsMenu:get_widget_updates(state)
+    state = state or {}
+    local current_money = state.player_money
+    if current_money == nil and _G.GetPlayerMoney then
+        current_money = _G.GetPlayerMoney()
+    end
+    current_money = current_money or 0
+
+    local bet = state.bet_amount or self.bet_amount
+    local is_demo = state.demo_mode
+    if is_demo == nil then
+        is_demo = self.demo_mode
+    end
+
+    local status_msg = state.status_message or self.status_message
+    local round = state.last_round or self.last_round
+
+    -- 1. txt_header
+    local header_text = string.format(
+        "TELADI PROFIT SPINNER  |  Balance: %d Cr  |  Bet: %d Cr",
+        current_money,
+        bet
+    )
+
+    -- 2. txt_mode_notice
+    local mode_text = ""
+    local mode_color = "Color.text_normal"
+    if is_demo then
+        mode_text = "★ DEMO MODE / OWNER FREE-PLAY ACTIVE - No Credits Exchanged ★"
+        mode_color = "Color.chatuser_5"
+    elseif state.is_player_owned then
+        local station_money = state.station_money
+        if station_money == nil and _G.GetStationMoney then
+            station_money = _G.GetStationMoney()
+        end
+        station_money = station_money or 0
+        local req_reserve = bet * MAX_JACKPOT_MULTIPLIER
+        if station_money < req_reserve then
+            mode_text = string.format(
+                "Station Treasury Low: %d Cr (Requires %d Cr reserve for max jackpot)",
+                station_money,
+                req_reserve
+            )
+            mode_color = "Color.text_inactive"
+        end
+    end
+
+    -- 3. btn_toggle_demo
+    local demo_btn_text = "Live Credits Mode (Click for Owner Free-Play / Demo Mode)"
+    if is_demo then
+        demo_btn_text = "Free-Play Active (Click to Switch to Live Credits)"
+    end
+
+    -- 4. box_reel1, box_reel2, box_reel3
+    local r1 = state.reel1
+    local r2 = state.reel2
+    local r3 = state.reel3
+    if not r1 then
+        if round and round.reels and round.reels[1] then
+            r1 = SYMBOL_BOX_NAMES[round.reels[1]] or SYMBOL_NAMES[round.reels[1]] or tostring(round.reels[1])
+        else
+            r1 = "[ --- ]"
+        end
+    end
+    if not r2 then
+        if round and round.reels and round.reels[2] then
+            r2 = SYMBOL_BOX_NAMES[round.reels[2]] or SYMBOL_NAMES[round.reels[2]] or tostring(round.reels[2])
+        else
+            r2 = "[ --- ]"
+        end
+    end
+    if not r3 then
+        if round and round.reels and round.reels[3] then
+            r3 = SYMBOL_BOX_NAMES[round.reels[3]] or SYMBOL_NAMES[round.reels[3]] or tostring(round.reels[3])
+        else
+            r3 = "[ --- ]"
+        end
+    end
+
+    return {
+        txt_header = {
+            id = "txt_header",
+            text = header_text,
+        },
+        txt_mode_notice = {
+            id = "txt_mode_notice",
+            text = mode_text,
+            color = mode_color,
+        },
+        btn_toggle_demo = {
+            id = "btn_toggle_demo",
+            text = {
+                text = demo_btn_text,
+                halign = "center",
+            },
+        },
+        box_reel1 = {
+            id = "box_reel1",
+            text = r1,
+        },
+        box_reel2 = {
+            id = "box_reel2",
+            text = r2,
+        },
+        box_reel3 = {
+            id = "box_reel3",
+            text = r3,
+        },
+        txt_banner = {
+            id = "txt_banner",
+            text = status_msg,
+        },
     }
 end
 

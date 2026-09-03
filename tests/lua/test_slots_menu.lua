@@ -191,7 +191,111 @@ function TestSlotsMenu:test_render_table_structure()
     luaunit.assertTrue(#table_data.rows >= 4, "Menu table should contain at least 4 rows")
 end
 
+function TestSlotsMenu:test_widget_updates_on_bet_change()
+    self.menu:open()
+    self.menu:set_bet(25000)
+    local updates = self.menu:get_widget_updates()
+    luaunit.assertNotNil(updates)
+    luaunit.assertNotNil(updates.txt_header)
+    luaunit.assertEquals(updates.txt_header.id, "txt_header")
+    luaunit.assertTrue(string.find(updates.txt_header.text, "25000 Cr") ~= nil)
+    luaunit.assertTrue(string.find(updates.txt_header.text, "500000 Cr") ~= nil)
+    luaunit.assertNotNil(updates.txt_banner)
+    luaunit.assertEquals(updates.txt_banner.id, "txt_banner")
+    luaunit.assertTrue(string.find(updates.txt_banner.text, "25000") ~= nil)
+end
+
+function TestSlotsMenu:test_widget_updates_on_demo_toggle()
+    self.menu:open()
+    self.menu:set_demo_mode(true)
+    local updates = self.menu:get_widget_updates()
+    luaunit.assertNotNil(updates)
+    luaunit.assertNotNil(updates.txt_mode_notice)
+    luaunit.assertEquals(updates.txt_mode_notice.id, "txt_mode_notice")
+    luaunit.assertTrue(string.find(updates.txt_mode_notice.text, "DEMO MODE") ~= nil)
+    luaunit.assertEquals(updates.txt_mode_notice.color, "Color.chatuser_5")
+    luaunit.assertNotNil(updates.btn_toggle_demo)
+    luaunit.assertEquals(updates.btn_toggle_demo.id, "btn_toggle_demo")
+    luaunit.assertEquals(updates.btn_toggle_demo.text.text, "Free-Play Active (Click to Switch to Live Credits)")
+    luaunit.assertEquals(updates.btn_toggle_demo.text.halign, "center")
+
+    -- Toggle back off to live credits
+    self.menu:set_demo_mode(false)
+    local updates2 = self.menu:get_widget_updates()
+    luaunit.assertEquals(updates2.txt_mode_notice.text, "")
+    luaunit.assertEquals(
+        updates2.btn_toggle_demo.text.text,
+        "Live Credits Mode (Click for Owner Free-Play / Demo Mode)"
+    )
+end
+
+function TestSlotsMenu:test_widget_updates_on_spin()
+    self.menu:open()
+    self.menu:set_bet(10000)
+    local round = self.menu:spin(42)
+    luaunit.assertNotNil(round)
+
+    local updates = self.menu:get_widget_updates()
+    luaunit.assertNotNil(updates)
+    luaunit.assertNotNil(updates.box_reel1)
+    luaunit.assertEquals(updates.box_reel1.id, "box_reel1")
+    luaunit.assertNotEquals(updates.box_reel1.text, "[ --- ]")
+
+    luaunit.assertNotNil(updates.box_reel2)
+    luaunit.assertEquals(updates.box_reel2.id, "box_reel2")
+    luaunit.assertNotEquals(updates.box_reel2.text, "[ --- ]")
+
+    luaunit.assertNotNil(updates.box_reel3)
+    luaunit.assertEquals(updates.box_reel3.id, "box_reel3")
+    luaunit.assertNotEquals(updates.box_reel3.text, "[ --- ]")
+
+    luaunit.assertNotNil(updates.txt_banner)
+    luaunit.assertEquals(updates.txt_banner.id, "txt_banner")
+    luaunit.assertEquals(updates.txt_banner.text, self.menu.status_message)
+
+    -- Header should reflect new player balance after spin
+    local current_money = _G.GetPlayerMoney()
+    luaunit.assertTrue(string.find(updates.txt_header.text, tostring(current_money)) ~= nil)
+end
+
+function TestSlotsMenu:test_widget_contract_id_conformance()
+    local expected_ids = {
+        "txt_header",
+        "txt_mode_notice",
+        "btn_toggle_demo",
+        "box_reel1",
+        "box_reel2",
+        "box_reel3",
+        "txt_banner"
+    }
+
+    local updates = self.menu:get_widget_updates()
+    for _, id in ipairs(expected_ids) do
+        luaunit.assertNotNil(updates[id], "Missing widget update key: " .. id)
+        luaunit.assertEquals(updates[id].id, id, "Widget update id property mismatch for: " .. id)
+    end
+
+    -- Verify all contract IDs are defined in md/CasinoStationCues.xml
+    local f = io.open("md/CasinoStationCues.xml", "r")
+    luaunit.assertNotNil(f, "Could not open md/CasinoStationCues.xml")
+    local content = f:read("*all")
+    f:close()
+
+    for _, id in ipairs(expected_ids) do
+        local needle = "$id%s*=%s*'" .. id .. "'"
+        local found = string.find(content, needle) ~= nil
+        luaunit.assertTrue(found, "Contract ID not found in XML: " .. id)
+    end
+
+    -- Also verify Update_Slots_UI helper cue exists in XML
+    luaunit.assertTrue(
+        string.find(content, 'cue name="Update_Slots_UI"') ~= nil,
+        "Update_Slots_UI cue missing from XML"
+    )
+end
+
 _G.TestSlotsMenu = TestSlotsMenu
 
 local runner = luaunit.LuaUnit.new()
 os.exit(runner:runSuite())
+

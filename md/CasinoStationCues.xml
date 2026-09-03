@@ -592,40 +592,38 @@
           param="table[
             $col = 1,
             $colSpan = 3,
+            $id = 'txt_header',
             $text = 'TELADI PROFIT SPINNER  |  Balance: ' + $balanceCr + ' Cr  |  Bet: ' + $data.$CurrentBet + ' Cr',
             $halign = 'center',
             $cellBGColor = 'Color.frame_background_semitransparent',
           ]"/>
 
         <!-- Row 2: Mode Banner / Solvency Notice -->
+        <set_value name="$modeNotice" exact="''"/>
+        <set_value name="$modeColor" exact="'Color.text_normal'"/>
         <do_if value="$data.$DemoMode == 1">
-          <signal_cue_instantly cue="md.Simple_Menu_API.Add_Row" param="table[$selectable = false]"/>
-          <signal_cue_instantly
-            cue="md.Simple_Menu_API.Make_Text"
-            param="table[
-              $col = 1,
-              $colSpan = 3,
-              $text = '★ DEMO MODE / OWNER FREE-PLAY ACTIVE - No Credits Exchanged ★',
-              $halign = 'center',
-              $color = 'Color.chatuser_5',
-            ]"/>
+          <set_value name="$modeNotice" exact="'★ DEMO MODE / OWNER FREE-PLAY ACTIVE - No Credits Exchanged ★'"/>
+          <set_value name="$modeColor" exact="'Color.chatuser_5'"/>
         </do_if>
         <do_elseif value="player.station.exists and player.station.isplayerowned">
           <set_value name="$stationTreasuryCr" exact="player.station.money / 100"/>
           <set_value name="$reqReserveCr" exact="$data.$CurrentBet * 50"/>
           <do_if value="$stationTreasuryCr lt $reqReserveCr">
-            <signal_cue_instantly cue="md.Simple_Menu_API.Add_Row" param="table[$selectable = false]"/>
-            <signal_cue_instantly
-              cue="md.Simple_Menu_API.Make_Text"
-              param="table[
-                $col = 1,
-                $colSpan = 3,
-                $text = 'Station Treasury Low: ' + $stationTreasuryCr + ' Cr (Requires ' + $reqReserveCr + ' Cr reserve for max jackpot)',
-                $halign = 'center',
-                $color = 'Color.text_inactive',
-              ]"/>
+            <set_value name="$modeNotice" exact="'Station Treasury Low: ' + $stationTreasuryCr + ' Cr (Requires ' + $reqReserveCr + ' Cr reserve for max jackpot)'"/>
+            <set_value name="$modeColor" exact="'Color.text_inactive'"/>
           </do_if>
         </do_elseif>
+        <signal_cue_instantly cue="md.Simple_Menu_API.Add_Row" param="table[$selectable = false]"/>
+        <signal_cue_instantly
+          cue="md.Simple_Menu_API.Make_Text"
+          param="table[
+            $col = 1,
+            $colSpan = 3,
+            $id = 'txt_mode_notice',
+            $text = $modeNotice,
+            $halign = 'center',
+            $color = $modeColor,
+          ]"/>
 
         <!-- Row 3: Owner Free-Play Toggle Button -->
         <signal_cue_instantly cue="md.Simple_Menu_API.Add_Row" param="table[]"/>
@@ -785,6 +783,92 @@
     </cue>
 
     <!--
+      Helper Cue: Standalone UI Live Widget Update Pipeline
+    -->
+    <cue name="Update_Slots_UI" instantiate="true" namespace="this">
+      <conditions>
+        <event_cue_signalled/>
+      </conditions>
+      <actions>
+        <do_if value="player.entity.$casino_data?">
+          <set_value name="$data" exact="player.entity.$casino_data"/>
+          <set_value name="$balanceCr" exact="player.money / 100"/>
+
+          <!-- 1. Header: Balance & Bet -->
+          <signal_cue_instantly
+            cue="md.Simple_Menu_API.Update_Widget"
+            param="table[
+              $id = 'txt_header',
+              $text = 'TELADI PROFIT SPINNER  |  Balance: ' + $balanceCr + ' Cr  |  Bet: ' + $data.$CurrentBet + ' Cr',
+            ]"/>
+
+          <!-- 2. Mode / Solvency Notice -->
+          <set_value name="$modeNotice" exact="''"/>
+          <set_value name="$modeColor" exact="'Color.text_normal'"/>
+          <do_if value="$data.$DemoMode == 1">
+            <set_value name="$modeNotice" exact="'★ DEMO MODE / OWNER FREE-PLAY ACTIVE - No Credits Exchanged ★'"/>
+            <set_value name="$modeColor" exact="'Color.chatuser_5'"/>
+          </do_if>
+          <do_elseif value="player.station.exists and player.station.isplayerowned">
+            <set_value name="$stationTreasuryCr" exact="player.station.money / 100"/>
+            <set_value name="$reqReserveCr" exact="$data.$CurrentBet * 50"/>
+            <do_if value="$stationTreasuryCr lt $reqReserveCr">
+              <set_value name="$modeNotice" exact="'Station Treasury Low: ' + $stationTreasuryCr + ' Cr (Requires ' + $reqReserveCr + ' Cr reserve for max jackpot)'"/>
+              <set_value name="$modeColor" exact="'Color.text_inactive'"/>
+            </do_if>
+          </do_elseif>
+          <signal_cue_instantly
+            cue="md.Simple_Menu_API.Update_Widget"
+            param="table[
+              $id = 'txt_mode_notice',
+              $text = $modeNotice,
+              $color = $modeColor,
+            ]"/>
+
+          <!-- 3. Demo Mode Toggle Button -->
+          <set_value name="$demoBtnText" exact="'Live Credits Mode (Click for Owner Free-Play / Demo Mode)'"/>
+          <do_if value="$data.$DemoMode == 1">
+            <set_value name="$demoBtnText" exact="'Free-Play Active (Click to Switch to Live Credits)'"/>
+          </do_if>
+          <signal_cue_instantly
+            cue="md.Simple_Menu_API.Update_Widget"
+            param="table[
+              $id = 'btn_toggle_demo',
+              $text = table[$text = $demoBtnText, $halign = 'center'],
+            ]"/>
+
+          <!-- 4. Reel Display Boxes -->
+          <signal_cue_instantly
+            cue="md.Simple_Menu_API.Update_Widget"
+            param="table[
+              $id = 'box_reel1',
+              $text = $data.$Reel1,
+            ]"/>
+          <signal_cue_instantly
+            cue="md.Simple_Menu_API.Update_Widget"
+            param="table[
+              $id = 'box_reel2',
+              $text = $data.$Reel2,
+            ]"/>
+          <signal_cue_instantly
+            cue="md.Simple_Menu_API.Update_Widget"
+            param="table[
+              $id = 'box_reel3',
+              $text = $data.$Reel3,
+            ]"/>
+
+          <!-- 5. Result Banner -->
+          <signal_cue_instantly
+            cue="md.Simple_Menu_API.Update_Widget"
+            param="table[
+              $id = 'txt_banner',
+              $text = $data.$ResultBanner,
+            ]"/>
+        </do_if>
+      </actions>
+    </cue>
+
+    <!--
       Handle Button Clicks, Bet Switching, Demo Mode, and Spin Logic
     -->
     <cue name="Handle_Casino_Action" instantiate="true" namespace="this">
@@ -819,41 +903,41 @@
             <set_value name="$data.$DemoMode" exact="1"/>
             <set_value name="$data.$ResultBanner" exact="'Owner Free-Play enabled. No credits deducted or won.'"/>
           </do_else>
-          <signal_cue_instantly cue="md.Simple_Menu_API.Refresh_Menu"/>
+          <signal_cue_instantly cue="Update_Slots_UI"/>
         </do_if>
 
         <!-- Bet 1,000 -->
         <do_if value="event.param.$id == 'btn_bet_1000'">
           <set_value name="$data.$CurrentBet" exact="1000"/>
           <set_value name="$data.$ResultBanner" exact="'Bet set to 1,000 Credits.'"/>
-          <signal_cue_instantly cue="md.Simple_Menu_API.Refresh_Menu"/>
+          <signal_cue_instantly cue="Update_Slots_UI"/>
         </do_if>
 
         <!-- Bet 5,000 -->
         <do_if value="event.param.$id == 'btn_bet_5000'">
           <set_value name="$data.$CurrentBet" exact="5000"/>
           <set_value name="$data.$ResultBanner" exact="'Bet set to 5,000 Credits.'"/>
-          <signal_cue_instantly cue="md.Simple_Menu_API.Refresh_Menu"/>
+          <signal_cue_instantly cue="Update_Slots_UI"/>
         </do_if>
 
         <!-- Bet 25,000 -->
         <do_if value="event.param.$id == 'btn_bet_25000'">
           <set_value name="$data.$CurrentBet" exact="25000"/>
           <set_value name="$data.$ResultBanner" exact="'Bet set to 25,000 Credits.'"/>
-          <signal_cue_instantly cue="md.Simple_Menu_API.Refresh_Menu"/>
+          <signal_cue_instantly cue="Update_Slots_UI"/>
         </do_if>
 
         <!-- Bet 100,000 -->
         <do_if value="event.param.$id == 'btn_bet_100000'">
           <set_value name="$data.$CurrentBet" exact="100000"/>
           <set_value name="$data.$ResultBanner" exact="'High Roller! Bet set to 100,000 Credits.'"/>
-          <signal_cue_instantly cue="md.Simple_Menu_API.Refresh_Menu"/>
+          <signal_cue_instantly cue="Update_Slots_UI"/>
         </do_if>
 
         <!-- Paytable Info -->
         <do_if value="event.param.$id == 'btn_payout_info'">
           <set_value name="$data.$ResultBanner" exact="'Paytable: 3x Profit (50x) | 3x Nividium (20x) | 3x Ore/Silicon (10x) | 3x Energy (5x) | 2x Match (2x)'"/>
-          <signal_cue_instantly cue="md.Simple_Menu_API.Refresh_Menu"/>
+          <signal_cue_instantly cue="Update_Slots_UI"/>
         </do_if>
 
         <!-- SPIN BUTTON PRESSED -->
@@ -864,7 +948,7 @@
 
           <do_if value="not $isDemo and player.money lt $betInternal">
             <set_value name="$data.$ResultBanner" exact="'Insufficient Credits for this bet!'"/>
-            <signal_cue_instantly cue="md.Simple_Menu_API.Refresh_Menu"/>
+            <signal_cue_instantly cue="Update_Slots_UI"/>
           </do_if>
           <do_else>
             <!-- Deduct Bet from Player if not Demo Mode -->
@@ -1055,7 +1139,7 @@
             </do_else>
 
             <!-- Refresh the menu with updated reels & credits -->
-            <signal_cue_instantly cue="md.Simple_Menu_API.Refresh_Menu"/>
+            <signal_cue_instantly cue="Update_Slots_UI"/>
           </do_else>
         </do_if>
       </actions>
