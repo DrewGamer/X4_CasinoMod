@@ -203,8 +203,9 @@
     <cue name="On_Bartender_Conversation_Started" instantiate="true" namespace="this">
       <conditions>
         <check_any>
-          <event_conversation_started/>
-          <event_conversation_returned_to_section/>
+          <event_conversation_started conversation="default"/>
+          <event_conversation_returned_to_section section="default"/>
+          <event_conversation_next_section section="default"/>
         </check_any>
         <check_value value="player.station.exists and event.object.isclass.npc and (
           event.object.type == entitytype.bartender or
@@ -212,11 +213,16 @@
         )"/>
       </conditions>
       <actions>
+        <!--
+          Dynamic Auto-Positioning:
+          By omitting the 'position' attribute, the X4 engine dynamically allocates the first available
+          unoccupied radial slot (e.g. top_right). This prevents slot collisions with vanilla 'Goodbye' (bottom_right)
+          and 'Directions/Hire' (top_left/left).
+        -->
         <add_player_choice
           text="'[Casino] Station Game Lobby'"
           section="'x4_casino_open_lobby'"
-          position="bottom_right"
-          comment="Diegetic bar interaction choice"/>
+          comment="Diegetic bar interaction choice (dynamic auto-positioning)"/>
       </actions>
     </cue>
 

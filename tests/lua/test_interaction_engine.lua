@@ -68,7 +68,7 @@ function InteractionEngine.classify_npc_interaction(actor, station)
     return "vanilla_only"
 end
 
-function InteractionEngine.handle_conversation_started(actor, station, player_entity)
+function InteractionEngine.handle_conversation_started(actor, station, player_entity, event_context)
     local action_type = InteractionEngine.classify_npc_interaction(actor, station)
 
     if action_type == "dealer_bypass" then
@@ -79,11 +79,26 @@ function InteractionEngine.handle_conversation_started(actor, station, player_en
             pending_open = "lobby"
         }
     elseif action_type == "bartender_dialogue" then
+        local is_default_section = true
+        if event_context then
+            if event_context.section and event_context.section ~= "default" then
+                is_default_section = false
+            elseif event_context.conversation and event_context.conversation ~= "default" then
+                is_default_section = false
+            end
+        end
+
+        local choices = {}
+        if is_default_section then
+            table.insert(choices, {
+                text = "[Casino] Station Game Lobby",
+                section = "x4_casino_open_lobby"
+            })
+        end
+
         return {
             close_conversation = false,
-            dialogue_choices = {
-                { text = "[Casino] Station Game Lobby", section = "x4_casino_open_lobby", position = "bottom_right" }
-            },
+            dialogue_choices = choices,
             pending_open = nil
         }
     else
@@ -248,7 +263,7 @@ function TestInteractionEngine:test_bartender_dialogue_hook()
     luaunit.assertEquals(#result.dialogue_choices, 1)
     luaunit.assertEquals(result.dialogue_choices[1].text, "[Casino] Station Game Lobby")
     luaunit.assertEquals(result.dialogue_choices[1].section, "x4_casino_open_lobby")
-    luaunit.assertEquals(result.dialogue_choices[1].position, "bottom_right")
+    luaunit.assertNil(result.dialogue_choices[1].position, "Position must be nil to enable dynamic auto-positioning")
 
     -- Selecting option
     local nav_result = InteractionEngine.handle_next_section("x4_casino_open_lobby", self.player_entity)
@@ -257,6 +272,79 @@ function TestInteractionEngine:test_bartender_dialogue_hook()
 
     local opened_cue = InteractionEngine.handle_conversation_finished(self.player_entity)
     luaunit.assertEquals(opened_cue, "Open_Lobby_Direct")
+end
+
+function TestInteractionEngine:test_bartender_dialogue_guard_prevents_submenu_injection()
+    local bartender = {
+        name = "Station Bartender",
+        entity_type = "bartender",
+        entity_role = "bartender"
+    }
+
+    -- Submenu or non-default section navigation
+    local submenu_context = { section = "directions" }
+    local result = InteractionEngine.handle_conversation_started(
+        bartender, self.station, self.player_entity, submenu_context
+    )
+    luaunit.assertFalse(result.close_conversation)
+    luaunit.assertEquals(#result.dialogue_choices, 0,
+        "No casino choices should be injected into bartender submenus (section ~= 'default')")
+end
+
+function TestInteractionEngine.test_bartender_xml_cue_contract()
+    local f = io.open("md/CasinoStationCues.xml", "r")
+    luaunit.assertNotNil(f, "md/CasinoStationCues.xml should exist and be readable")
+    local content = f:read("*a")
+    f:close()
+
+    -- Extract On_Bartender_Conversation_Started cue block
+    local cue_start = content:find('<cue name="On_Bartender_Conversation_Started"')
+    luaunit.assertNotNil(cue_start, "On_Bartender_Conversation_Started cue must exist")
+    local cue_end = content:find('</cue>', cue_start)
+    local cue_block = content:sub(cue_start, cue_end)
+
+    -- Verify default section guards
+    luaunit.assertTrue(
+        cue_block:find('<event_conversation_started conversation="default"/>', 1, true) ~= nil,
+        "Guard must check event_conversation_started conversation='default'"
+    )
+    luaunit.assertTrue(
+        cue_block:find('<event_conversation_returned_to_section section="default"/>', 1, true) ~= nil,
+        "Guard must check event_conversation_returned_to_section section='default'"
+    )
+    luaunit.assertTrue(
+        cue_block:find('<event_conversation_next_section section="default"/>', 1, true) ~= nil,
+        "Guard must check event_conversation_next_section section='default'"
+    )
+
+    -- Verify dynamic auto-positioning (no position attribute)
+    luaunit.assertTrue(
+        cue_block:find("text=\"'[Casino] Station Game Lobby'\"", 1, true) ~= nil,
+        "Choice text must be '[Casino] Station Game Lobby'"
+    )
+    luaunit.assertTrue(
+        cue_block:find("section=\"'x4_casino_open_lobby'\"", 1, true) ~= nil,
+        "Choice section must be 'x4_casino_open_lobby'"
+    )
+    luaunit.assertFalse(
+        cue_block:find('position=', 1, true) ~= nil,
+        "position attribute must be omitted for dynamic auto-positioning"
+    )
+
+    -- Extract On_Bartender_Next_Section cue block
+    local next_start = content:find('<cue name="On_Bartender_Next_Section"')
+    luaunit.assertNotNil(next_start, "On_Bartender_Next_Section cue must exist")
+    local next_end = content:find('</cue>', next_start)
+    local next_block = content:sub(next_start, next_end)
+
+    luaunit.assertTrue(
+        next_block:find('<event_conversation_next_section section="\'x4_casino_open_lobby\'"/>', 1, true) ~= nil,
+        "On_Bartender_Next_Section must trigger on section 'x4_casino_open_lobby'"
+    )
+    luaunit.assertTrue(
+        next_block:find('<close_conversation/>', 1, true) ~= nil,
+        "On_Bartender_Next_Section must execute close_conversation"
+    )
 end
 
 function TestInteractionEngine:test_wandering_npc_filtered_cleanly()
