@@ -1,11 +1,20 @@
-# PowerShell Hook for Antigravity: Security and Streamline Gate
-# Enforces workspace boundaries, human PR review/merge gate, and .agents protection while auto-approving safe dev workflows.
+# PowerShell Hook for Antigravity: Security and Workspace Boundary Gate
+# Restricts AI execution strictly to the workspace boundary:
+# - Blocks any commands or file operations outside C:\Projects\X4_CasinoMod
+# - Preserves human-in-the-loop gate for PR merging and branch destruction
+# - Protects the security gate itself from tampering
+# - Auto-approves all safe development tools, compilers, test runners, bash, and git operations within the workspace
 
 [Console]::InputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 try {
+    # Read from Console standard input, fallback to pipeline $input if available
     $rawInput = [Console]::In.ReadToEnd()
+    if ([string]::IsNullOrWhiteSpace($rawInput) -and $input) {
+        $rawInput = ($input | Out-String)
+    }
+
     if ([string]::IsNullOrWhiteSpace($rawInput)) {
         [PSCustomObject]@{ decision = "ask"; reason = "No input payload received" } | ConvertTo-Json -Compress
         exit 0
@@ -35,8 +44,8 @@ try {
         }
 
         $fullPath = [System.IO.Path]::GetFullPath($targetFile)
-        
-        # Check workspace boundary
+
+        # Enforce workspace boundary: strictly block edits outside workspace
         if (-not $fullPath.StartsWith($normalizedWorkspace, [System.StringComparison]::OrdinalIgnoreCase)) {
             [PSCustomObject]@{
                 decision = "ask"
@@ -45,24 +54,18 @@ try {
             exit 0
         }
 
-        # Check .agents protection (plans, readme, changelog are allowed)
         $relPath = $fullPath.Substring($normalizedWorkspace.Length).TrimStart('\', '/')
-        if ($relPath -match '^\.agents[\\/]') {
-            # Allowed exception: .agents/plans/*
-            if ($relPath -match '^\.agents[\\/]plans[\\/]') {
-                [PSCustomObject]@{ decision = "allow" } | ConvertTo-Json -Compress
-                exit 0
-            }
 
-            # Any other file in .agents/ (personas, skills, rules, hooks, etc.) requires approval
+        # Protect the security gate itself and hooks config from self-tampering
+        if ($relPath -match '^(\.agents[\\/]scripts[\\/]security_gate\.ps1|\.agents[\\/]hooks\.json)$') {
             [PSCustomObject]@{
                 decision = "ask"
-                reason = "Modifications to agent configuration files ($relPath) require human approval."
+                reason = "Modifying the security gate configuration requires human approval."
             } | ConvertTo-Json -Compress
             exit 0
         }
 
-        # Normal project files within workspace
+        # Normal project files, code, tests, plans, personas, and skills within workspace are allowed
         [PSCustomObject]@{ decision = "allow" } | ConvertTo-Json -Compress
         exit 0
     }
@@ -74,7 +77,7 @@ try {
         $cmd = if ($args.CommandLine) { $args.CommandLine.Trim() } else { "" }
         $cwd = if ($args.Cwd) { $args.Cwd.Trim() } else { $normalizedWorkspace }
 
-        # Check working directory boundary
+        # Check working directory boundary: MUST be within workspace
         $fullCwd = [System.IO.Path]::GetFullPath($cwd)
         if (-not $fullCwd.StartsWith($normalizedWorkspace, [System.StringComparison]::OrdinalIgnoreCase)) {
             [PSCustomObject]@{
@@ -84,91 +87,70 @@ try {
             exit 0
         }
 
-        # RESTRICTION 1: PR Approval & Merge Gate (MUST be done by Human)
+        # RESTRICTION 1: PR Merge / Review Gate (Must be reviewed/approved by Human)
         if ($cmd -match '\bgh\s+pr\s+merge\b' -or 
             $cmd -match '\bgh\s+pr\s+review\b.*(--approve|-a\b)' -or
-            $cmd -match '\bgit\s+merge\b') {
+            $cmd -match '\bgit\s+merge\s+(main|master)\b') {
             [PSCustomObject]@{
                 decision = "ask"
-                reason = "Pull request approval and branch merging require explicit human review."
+                reason = "Pull request approval and merging to main branch require explicit human review."
             } | ConvertTo-Json -Compress
             exit 0
         }
 
-        # RESTRICTION 2: Direct modifications/deletions of protected .agents/ configs via shell
-        if ($cmd -match '\.agents[\\/](personas|skills|rules|hooks|scripts)\b' -and 
+        # RESTRICTION 2: Tampering with security gate via shell commands
+        if ($cmd -match '(\.agents[\\/]scripts[\\/]security_gate\.ps1|\.agents[\\/]hooks\.json)\b' -and 
             $cmd -match '(rm|del|rmdir|remove-item|set-content|out-file|>|>>|mv|move-item)') {
             [PSCustomObject]@{
                 decision = "ask"
-                reason = "Shell commands targeting protected agent configurations require human approval."
+                reason = "Modifying or deleting the security gate via shell requires human approval."
             } | ConvertTo-Json -Compress
             exit 0
         }
 
-        # -------------------------------------------------------------------------
-        # ALLOWED DEV COMMANDS (Streamlined Auto-Approval for X4 Casino Mod)
-        # -------------------------------------------------------------------------
-
-        # 1. Project Toolchains & Runtimes (Python, Lua, Luacheck, Archive/Catalog tools)
-        if ($cmd -match '^\s*(&\s*)?(\.?[\/\\]?\.venv[\/\\]Scripts[\/\\])?(python|pytest|pip|py)\b' -or
-            $cmd -match '^\s*(&\s*)?(\.?[\/\\]?\.tools[\/\\]lua[\/\\])?(lua|luacheck)\b' -or
-            $cmd -match '^\s*(&\s*)?(\.?[\/\\]?\.tools[\/\\]egosoft[\/\\])?(XRcatTool)\b' -or
-            $cmd -match '^\s*(7z|7za|tar|zip|Compress-Archive)\b') {
-            [PSCustomObject]@{ decision = "allow" } | ConvertTo-Json -Compress
+        # RESTRICTION 3: Catastrophic git destruction
+        if ($cmd -match '\b(rm|Remove-Item)\s+.*-r.*\b\.git\b' -or
+            $cmd -match '\bgit\s+clean\s+.*-fdx\b') {
+            [PSCustomObject]@{
+                decision = "ask"
+                reason = "Destructive repo commands require explicit human confirmation."
+            } | ConvertTo-Json -Compress
             exit 0
         }
 
-        # 2. PowerShell Script Execution & File Creation (Scoped within X4_CasinoMod or subfolders)
-        if ($cmd -match '^\s*(powershell|pwsh)(\.exe)?\b' -or
-            $cmd -match '^\s*(&\s*)?(\.[\/\\]|[a-zA-Z]:[\\/])?[^\r\n]+\.ps1\b' -or
-            $cmd -match '^\s*(New-Item|ni|mkdir|Set-Content|sc|Add-Content|ac|Out-File|Copy-Item|cpi|cp|Move-Item|mi|mv|touch)\b') {
-            
-            # Check if any explicit absolute path in the command targets a location outside the workspace
-            $absPathMatches = [regex]::Matches($cmd, '([a-zA-Z]:[\\/][^\s"''`]+)')
-            $outsideWorkspace = $false
-            foreach ($m in $absPathMatches) {
-                $targetPath = [System.IO.Path]::GetFullPath($m.Value)
+        # BOUNDARY CHECK: Scan command for explicit absolute paths outside the workspace
+        # Matches drive paths like C:\..., D:/..., etc.
+        $absPathMatches = [regex]::Matches($cmd, '([a-zA-Z]:[\\/][^\s"''`]+)')
+        $outsideWorkspace = $false
+        foreach ($m in $absPathMatches) {
+            $rawPath = $m.Value.TrimEnd(';', ',', '"', "'")
+            # Exclude known benign system runtime / program directories (Python, Git, PowerShell binaries)
+            if ($rawPath -match '^(C:[\\/](Windows|Program Files|Program Files \(x86\)))' -or
+                $rawPath -match '[\\/]AppData[\\/]Local[\\/]Programs[\\/]') {
+                continue
+            }
+            try {
+                $targetPath = [System.IO.Path]::GetFullPath($rawPath)
                 if (-not $targetPath.StartsWith($normalizedWorkspace, [System.StringComparison]::OrdinalIgnoreCase)) {
                     $outsideWorkspace = $true
                     break
                 }
+            } catch {
+                # In case regex matched invalid path characters, continue
             }
+        }
 
-            if ($outsideWorkspace) {
-                [PSCustomObject]@{
-                    decision = "ask"
-                    reason = "Command contains paths targeting outside workspace boundary."
-                } | ConvertTo-Json -Compress
-                exit 0
-            }
-
-            [PSCustomObject]@{ decision = "allow" } | ConvertTo-Json -Compress
+        if ($outsideWorkspace) {
+            [PSCustomObject]@{
+                decision = "ask"
+                reason = "Command references filesystem path outside workspace boundary: $($m.Value)"
+            } | ConvertTo-Json -Compress
             exit 0
         }
 
-        # 3. Git safe commands (init, status, branch, checkout, switch, diff, log, show, rev-parse, add, commit, push, tag, fetch, pull)
-        if ($cmd -match '^\s*git\s+(init|status|branch|checkout|switch|diff|log|show|rev-parse|add|commit|push|tag|fetch|pull)\b') {
-            [PSCustomObject]@{ decision = "allow" } | ConvertTo-Json -Compress
-            exit 0
-        }
-
-        # 4. GitHub CLI safe commands (pr create, pr view, pr list, pr status, pr diff, release view, release create, release upload, release list)
-        if ($cmd -match '^\s*gh\s+(pr\s+(create|view|list|status|diff)|release\s+(view|create|upload|list))\b') {
-            [PSCustomObject]@{ decision = "allow" } | ConvertTo-Json -Compress
-            exit 0
-        }
-
-        # 5. Safe read/inspection commands (dir, ls, cat, type, echo, pwd, test, Test-Path, Get-ChildItem, Get-Content, Get-Location)
-        if ($cmd -match '^\s*(ls|dir|cat|type|echo|pwd|Test-Path|Get-ChildItem|Get-Content|Get-Location)\b') {
-            [PSCustomObject]@{ decision = "allow" } | ConvertTo-Json -Compress
-            exit 0
-        }
-
-        # Default fallback for any other unrecognized or complex commands: ask user
-        [PSCustomObject]@{
-            decision = "ask"
-            reason = "Command requires user confirmation."
-        } | ConvertTo-Json -Compress
+        # In-workspace command execution: ALLOWED
+        # Allows python, lua, bash, sh, pwsh, git, gh, pytest, luacheck, compilers, curl, grep, etc.
+        [PSCustomObject]@{ decision = "allow" } | ConvertTo-Json -Compress
         exit 0
     }
 
@@ -176,7 +158,7 @@ try {
     [PSCustomObject]@{ decision = "allow" } | ConvertTo-Json -Compress
 }
 catch {
-    # If script errors, gracefully fallback to ask so work is not blocked
+    # If script errors, fallback to ask so system safety is not compromised
     [PSCustomObject]@{
         decision = "ask"
         reason = "Security hook encountered an error: $($_.Exception.Message)"

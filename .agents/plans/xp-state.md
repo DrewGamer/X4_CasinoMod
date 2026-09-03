@@ -83,11 +83,11 @@ Three-tier decoupled mod architecture centered around the vanilla **Casino** and
 | T8.14 | Standalone UI Live Widget Update Pipeline (`md.Simple_Menu_API.Update_Widget`) | done | xp-developer | T8.13 |
 | T8.15 | Savegame Schema Defense & Blackboard Null Migration (`not $JackpotsHit?`) | done | xp-developer | T8.12 |
 | T8.16 | ASCII Typography Sanitization (Eliminate `?` glyph rendering artifacts) | done | xp-developer | T8.14 |
-| T8.17 | Regression Verification & Continuous Re-Packaging (`scripts/test.ps1`, `scripts/build.ps1`) | pending | xp-developer | T8.9, T8.13, T8.14, T8.15, T8.16 |
+| T8.17 | Regression Verification & Continuous Re-Packaging (`scripts/test.ps1`, `scripts/build.ps1`) | done | xp-developer | T8.9, T8.13, T8.14, T8.15, T8.16 |
 
 ## 5. Sub-Agent Coordination
 - **Phase 0 & 1**: Architectural Blueprint v5 formulated by `xp-architect` in [.agents/plans/station-interior-interaction-architecture.md](file:///C:/Projects/X4_CasinoMod/.agents/plans/station-interior-interaction-architecture.md) resolving Tier 2 bartender menu overflow concerns, proving non-overflow on 6-slot radial wheel, eliminating `position='bottom_right'` collision, guarding against submenu re-injection, rejecting ECM dependency, and solidifying standalone widget live updates.
-- **Phase 2 Execution**: `xp-developer` to implement pending tasks `T8.9` and `T8.13` through `T8.17` on feature branch `feat/station-physical-interaction`.
+- **Phase 2 Execution**: `xp-developer` completed tasks `T8.9` and `T8.13` through `T8.17` on feature branch `feat/station-physical-interaction`.
 - **Phase 3 Continuous Packaging**: `release-packager` will bundle `dist/x4_casino_mod.zip` and publish to GitHub tag `continuous-build`.
 - **Phase 4 Manual Checkpoint**: Human manual verification of test suite & built artifact.
 - **Phase 5 Release Gate**: PR creation via `gh pr create`, merge to `main`, `CHANGELOG.md` stamp, and SemVer release creation (`v0.2.0-beta`).
@@ -105,6 +105,7 @@ Three-tier decoupled mod architecture centered around the vanilla **Casino** and
 - [x] Phase 1 Architecture Blueprint v3 Approval (Static Dealer Hooking & Conversation Bypass)
 - [x] Phase 2 Station Physical Immersion Implementation Complete (T8.7–T8.12)
 - [x] Phase 1 Architecture Blueprint v5 Approval (Sanitized Bartender Comms Routing & Collision Defense)
+- [x] Phase 2 Station Physical Immersion Hardening Complete (T8.9, T8.13–T8.17)
 
 ## 7. Release Configuration
 **Continuous Release Tag:** continuous-build

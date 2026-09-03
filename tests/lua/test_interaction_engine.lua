@@ -187,6 +187,48 @@ function InteractionEngine.handle_room_exit(old_room)
     return false
 end
 
+function InteractionEngine.migrate_savegame_state(casino_data)
+    if not casino_data then
+        casino_data = {}
+    end
+
+    if casino_data.CurrentBet == nil then
+        casino_data.CurrentBet = 5000
+    end
+    if casino_data.Reel1 == nil then
+        casino_data.Reel1 = "[ PROFIT! ]"
+    end
+    if casino_data.Reel2 == nil then
+        casino_data.Reel2 = "[ PROFIT! ]"
+    end
+    if casino_data.Reel3 == nil then
+        casino_data.Reel3 = "[ PROFIT! ]"
+    end
+    if casino_data.ResultBanner == nil then
+        casino_data.ResultBanner = "Match 3 symbols for profitsss!"
+    end
+    if casino_data.TotalSpins == nil then
+        casino_data.TotalSpins = 0
+    end
+    if casino_data.TotalWagered == nil then
+        casino_data.TotalWagered = 0
+    end
+    if casino_data.TotalWon == nil then
+        casino_data.TotalWon = 0
+    end
+    if casino_data.NetProfit == nil then
+        casino_data.NetProfit = 0
+    end
+    if casino_data.JackpotsHit == nil then
+        casino_data.JackpotsHit = 0
+    end
+    if casino_data.DemoMode == nil then
+        casino_data.DemoMode = 0
+    end
+
+    return casino_data
+end
+
 -- =========================================================================
 -- Unit Tests
 -- =========================================================================
@@ -525,6 +567,125 @@ function TestInteractionEngine.test_ascii_typography_sanitization()
         non_ascii_count,
         0,
         "Non-ASCII characters detected (causes '?' glyph corruption): " .. table.concat(failure_details, ", ")
+    )
+end
+
+function TestInteractionEngine.test_transient_croupier_xml_cue_contract()
+    local f = io.open("md/CasinoStationCues.xml", "r")
+    luaunit.assertNotNil(f, "md/CasinoStationCues.xml should exist and be readable")
+    local content = f:read("*a")
+    f:close()
+
+    -- 1. Must check $DealerSlots.count == 0 before spawning fallback croupier
+    luaunit.assertTrue(
+        content:find("$DealerSlots.count == 0", 1, true) ~= nil,
+        "Fallback croupier must only spawn when $DealerSlots.count == 0"
+    )
+
+    -- 2. Must select station owner primary race
+    luaunit.assertTrue(
+        content:find('select race="player.station.owner.primaryrace"', 1, true) ~= nil,
+        "Fallback croupier must match station owner primary race"
+    )
+
+    -- 3. Must flag host as casino croupier
+    luaunit.assertTrue(
+        content:find("$host.$is_casino_croupier", 1, true) ~= nil,
+        "Fallback croupier must set $host.$is_casino_croupier"
+    )
+
+    -- 4. Clean despawn in On_Player_Left_Room
+    local exit_cue_start = content:find('<cue name="On_Player_Left_Room"')
+    luaunit.assertNotNil(exit_cue_start, "On_Player_Left_Room cue must exist")
+    local exit_cue_end = content:find('</cue>', exit_cue_start)
+    local exit_block = content:sub(exit_cue_start, exit_cue_end)
+
+    luaunit.assertTrue(
+        exit_block:find('<destroy_object object="event.param.$casino_host"/>', 1, true) ~= nil,
+        "On_Player_Left_Room must destroy $casino_host"
+    )
+    luaunit.assertTrue(
+        exit_block:find('<remove_value name="event.param.$casino_host"/>', 1, true) ~= nil,
+        "On_Player_Left_Room must remove $casino_host blackboard reference"
+    )
+end
+
+function TestInteractionEngine.test_standalone_ui_live_widget_update_pipeline()
+    local f = io.open("md/CasinoStationCues.xml", "r")
+    luaunit.assertNotNil(f, "md/CasinoStationCues.xml should exist and be readable")
+    local content = f:read("*a")
+    f:close()
+
+    -- 1. Verify Update_Slots_UI cue exists
+    local update_cue_start = content:find('<cue name="Update_Slots_UI"')
+    luaunit.assertNotNil(update_cue_start, "Update_Slots_UI helper cue must exist in md/CasinoStationCues.xml")
+    local update_cue_end = content:find('</cue>', update_cue_start)
+    local update_block = content:sub(update_cue_start, update_cue_end)
+
+    -- 2. Verify all 7 required widgets are targeted via md.Simple_Menu_API.Update_Widget
+    local required_widget_ids = {
+        "txt_header",
+        "txt_mode_notice",
+        "btn_toggle_demo",
+        "box_reel1",
+        "box_reel2",
+        "box_reel3",
+        "txt_banner"
+    }
+    for _, widget_id in ipairs(required_widget_ids) do
+        local target = "$id%s*=%s*'" .. widget_id .. "'"
+        luaunit.assertTrue(
+            update_block:find(target) ~= nil,
+            "Update_Slots_UI must update widget: " .. widget_id
+        )
+    end
+
+    -- 3. Verify actions signal Update_Slots_UI
+    luaunit.assertTrue(
+        content:find('signal_cue_instantly cue="Update_Slots_UI"', 1, true) ~= nil,
+        "Actions in md/CasinoStationCues.xml must signal Update_Slots_UI"
+    )
+end
+
+function TestInteractionEngine.test_savegame_schema_defense_and_null_migration()
+    -- Emulate legacy savegame state missing new schema keys
+    local legacy_data = {
+        CurrentBet = 5000,
+        TotalSpins = 12,
+        TotalWagered = 60000,
+        TotalWon = 25000,
+        NetProfit = -35000
+        -- JackpotsHit is missing (nil)
+        -- DemoMode is missing (nil)
+        -- Reel1, Reel2, Reel3 missing
+        -- ResultBanner missing
+    }
+
+    -- Step 1: Run migration through InteractionEngine emulator
+    local migrated = InteractionEngine.migrate_savegame_state(legacy_data)
+    luaunit.assertNotNil(migrated, "Migration function must return migrated table")
+    luaunit.assertEquals(migrated.JackpotsHit, 0, "Missing JackpotsHit must migrate to 0")
+    luaunit.assertEquals(migrated.DemoMode, 0, "Missing DemoMode must migrate to 0")
+    luaunit.assertEquals(migrated.Reel1, "[ PROFIT! ]", "Missing Reel1 must default to '[ PROFIT! ]'")
+    luaunit.assertEquals(migrated.Reel2, "[ PROFIT! ]", "Missing Reel2 must default to '[ PROFIT! ]'")
+    luaunit.assertEquals(migrated.Reel3, "[ PROFIT! ]", "Missing Reel3 must default to '[ PROFIT! ]'")
+    luaunit.assertEquals(migrated.ResultBanner, "Match 3 symbols for profitsss!", "Missing ResultBanner must default")
+    luaunit.assertEquals(migrated.TotalSpins, 12, "Existing TotalSpins must be preserved")
+    luaunit.assertEquals(migrated.CurrentBet, 5000, "Existing CurrentBet must be preserved")
+
+    -- Step 2: Validate XML contract across Init_Casino_State, Open_Lobby_Direct, Build_Lobby_Menu
+    local f = io.open("md/CasinoStationCues.xml", "r")
+    luaunit.assertNotNil(f, "md/CasinoStationCues.xml should exist and be readable")
+    local content = f:read("*a")
+    f:close()
+
+    luaunit.assertTrue(
+        content:find("not player.entity.$casino_data.$JackpotsHit?", 1, true) ~= nil,
+        "Init_Casino_State or menu builds must guard against missing $JackpotsHit"
+    )
+    luaunit.assertTrue(
+        content:find("not player.entity.$casino_data.$DemoMode?", 1, true) ~= nil,
+        "Init_Casino_State or menu builds must guard against missing $DemoMode"
     )
 end
 
