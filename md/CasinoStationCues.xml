@@ -26,6 +26,43 @@
           <set_value name="player.entity.$casino_data.$JackpotsHit" exact="0"/>
           <set_value name="player.entity.$casino_data.$DemoMode" exact="0"/>
         </do_if>
+        <do_else>
+          <!-- Savegame Schema Defense & Blackboard Null Migration -->
+          <do_if value="not player.entity.$casino_data.$CurrentBet?">
+            <set_value name="player.entity.$casino_data.$CurrentBet" exact="5000"/>
+          </do_if>
+          <do_if value="not player.entity.$casino_data.$Reel1?">
+            <set_value name="player.entity.$casino_data.$Reel1" exact="'[ PROFIT! ]'"/>
+          </do_if>
+          <do_if value="not player.entity.$casino_data.$Reel2?">
+            <set_value name="player.entity.$casino_data.$Reel2" exact="'[ PROFIT! ]'"/>
+          </do_if>
+          <do_if value="not player.entity.$casino_data.$Reel3?">
+            <set_value name="player.entity.$casino_data.$Reel3" exact="'[ PROFIT! ]'"/>
+          </do_if>
+          <do_if value="not player.entity.$casino_data.$ResultBanner?">
+            <set_value name="player.entity.$casino_data.$ResultBanner" exact="'Match 3 symbols for profitsss!'"/>
+          </do_if>
+          <do_if value="not player.entity.$casino_data.$TotalSpins?">
+            <set_value name="player.entity.$casino_data.$TotalSpins" exact="0"/>
+          </do_if>
+          <do_if value="not player.entity.$casino_data.$TotalWagered?">
+            <set_value name="player.entity.$casino_data.$TotalWagered" exact="0"/>
+          </do_if>
+          <do_if value="not player.entity.$casino_data.$TotalWon?">
+            <set_value name="player.entity.$casino_data.$TotalWon" exact="0"/>
+          </do_if>
+          <do_if value="not player.entity.$casino_data.$NetProfit?">
+            <set_value name="player.entity.$casino_data.$NetProfit" exact="0"/>
+          </do_if>
+          <do_if value="not player.entity.$casino_data.$JackpotsHit?">
+            <set_value name="player.entity.$casino_data.$JackpotsHit" exact="0"/>
+          </do_if>
+          <do_if value="not player.entity.$casino_data.$DemoMode?">
+            <set_value name="player.entity.$casino_data.$DemoMode" exact="0"/>
+          </do_if>
+        </do_else>
+        <reset_cue cue="this"/>
       </actions>
     </cue>
 
@@ -278,6 +315,14 @@
           <set_value name="player.entity.$casino_data.$JackpotsHit" exact="0"/>
           <set_value name="player.entity.$casino_data.$DemoMode" exact="0"/>
         </do_if>
+        <do_else>
+          <do_if value="not player.entity.$casino_data.$JackpotsHit?">
+            <set_value name="player.entity.$casino_data.$JackpotsHit" exact="0"/>
+          </do_if>
+          <do_if value="not player.entity.$casino_data.$DemoMode?">
+            <set_value name="player.entity.$casino_data.$DemoMode" exact="0"/>
+          </do_if>
+        </do_else>
 
         <!-- Track Station House Ledger if docked at a station -->
         <do_if value="player.station.exists">
@@ -329,6 +374,14 @@
           <set_value name="player.entity.$casino_data.$JackpotsHit" exact="0"/>
           <set_value name="player.entity.$casino_data.$DemoMode" exact="0"/>
         </do_if>
+        <do_else>
+          <do_if value="not player.entity.$casino_data.$JackpotsHit?">
+            <set_value name="player.entity.$casino_data.$JackpotsHit" exact="0"/>
+          </do_if>
+          <do_if value="not player.entity.$casino_data.$DemoMode?">
+            <set_value name="player.entity.$casino_data.$DemoMode" exact="0"/>
+          </do_if>
+        </do_else>
 
         <!-- Track Station House Ledger if docked at a station -->
         <do_if value="player.station.exists">
@@ -365,6 +418,45 @@
         <event_cue_signalled/>
       </conditions>
       <actions>
+        <!-- Ensure player data table exists and migrated -->
+        <do_if value="not player.entity.$casino_data?">
+          <set_value name="player.entity.$casino_data" exact="table[]"/>
+          <set_value name="player.entity.$casino_data.$CurrentBet" exact="5000"/>
+          <set_value name="player.entity.$casino_data.$Reel1" exact="'[ PROFIT! ]'"/>
+          <set_value name="player.entity.$casino_data.$Reel2" exact="'[ PROFIT! ]'"/>
+          <set_value name="player.entity.$casino_data.$Reel3" exact="'[ PROFIT! ]'"/>
+          <set_value name="player.entity.$casino_data.$ResultBanner" exact="'Match 3 symbols for profitsss!'"/>
+          <set_value name="player.entity.$casino_data.$TotalSpins" exact="0"/>
+          <set_value name="player.entity.$casino_data.$TotalWagered" exact="0"/>
+          <set_value name="player.entity.$casino_data.$TotalWon" exact="0"/>
+          <set_value name="player.entity.$casino_data.$NetProfit" exact="0"/>
+          <set_value name="player.entity.$casino_data.$JackpotsHit" exact="0"/>
+          <set_value name="player.entity.$casino_data.$DemoMode" exact="0"/>
+        </do_if>
+        <do_else>
+          <do_if value="not player.entity.$casino_data.$CurrentBet?">
+            <set_value name="player.entity.$casino_data.$CurrentBet" exact="5000"/>
+          </do_if>
+          <do_if value="not player.entity.$casino_data.$TotalSpins?">
+            <set_value name="player.entity.$casino_data.$TotalSpins" exact="0"/>
+          </do_if>
+          <do_if value="not player.entity.$casino_data.$TotalWagered?">
+            <set_value name="player.entity.$casino_data.$TotalWagered" exact="0"/>
+          </do_if>
+          <do_if value="not player.entity.$casino_data.$TotalWon?">
+            <set_value name="player.entity.$casino_data.$TotalWon" exact="0"/>
+          </do_if>
+          <do_if value="not player.entity.$casino_data.$NetProfit?">
+            <set_value name="player.entity.$casino_data.$NetProfit" exact="0"/>
+          </do_if>
+          <do_if value="not player.entity.$casino_data.$JackpotsHit?">
+            <set_value name="player.entity.$casino_data.$JackpotsHit" exact="0"/>
+          </do_if>
+          <do_if value="not player.entity.$casino_data.$DemoMode?">
+            <set_value name="player.entity.$casino_data.$DemoMode" exact="0"/>
+          </do_if>
+        </do_else>
+
         <set_value name="$balanceCr" exact="player.money / 100"/>
         <set_value name="$data" exact="player.entity.$casino_data"/>
 
@@ -508,12 +600,17 @@
             $color = 'Color.chatuser_5',
           ]"/>
         <signal_cue_instantly cue="md.Simple_Menu_API.Add_Row" param="table[$selectable = false]"/>
+        <set_value name="$statSpins" exact="if $data.$TotalSpins? then $data.$TotalSpins else 0"/>
+        <set_value name="$statWagered" exact="if $data.$TotalWagered? then $data.$TotalWagered else 0"/>
+        <set_value name="$statWon" exact="if $data.$TotalWon? then $data.$TotalWon else 0"/>
+        <set_value name="$statNet" exact="if $data.$NetProfit? then $data.$NetProfit else 0"/>
+        <set_value name="$statJackpots" exact="if player.entity.$casino_data.$JackpotsHit? then player.entity.$casino_data.$JackpotsHit else 0"/>
         <signal_cue_instantly
           cue="md.Simple_Menu_API.Make_Text"
           param="table[
             $col = 1,
             $colSpan = 4,
-            $text = 'Total Spins: ' + $data.$TotalSpins + '  |  Wagered: ' + $data.$TotalWagered + ' Cr  |  Won: ' + $data.$TotalWon + ' Cr  |  Net: ' + $data.$NetProfit + ' Cr  |  Jackpots: ' + $data.$JackpotsHit,
+            $text = 'Total Spins: ' + $statSpins + '  |  Wagered: ' + $statWagered + ' Cr  |  Won: ' + $statWon + ' Cr  |  Net: ' + $statNet + ' Cr  |  Jackpots: ' + $statJackpots,
             $halign = 'center',
             $cellBGColor = 'Color.frame_background_semitransparent',
           ]"/>
@@ -579,6 +676,41 @@
           <set_value name="player.entity.$casino_data.$JackpotsHit" exact="0"/>
           <set_value name="player.entity.$casino_data.$DemoMode" exact="0"/>
         </do_if>
+        <do_else>
+          <do_if value="not player.entity.$casino_data.$CurrentBet?">
+            <set_value name="player.entity.$casino_data.$CurrentBet" exact="5000"/>
+          </do_if>
+          <do_if value="not player.entity.$casino_data.$Reel1?">
+            <set_value name="player.entity.$casino_data.$Reel1" exact="'[ --- ]'"/>
+          </do_if>
+          <do_if value="not player.entity.$casino_data.$Reel2?">
+            <set_value name="player.entity.$casino_data.$Reel2" exact="'[ --- ]'"/>
+          </do_if>
+          <do_if value="not player.entity.$casino_data.$Reel3?">
+            <set_value name="player.entity.$casino_data.$Reel3" exact="'[ --- ]'"/>
+          </do_if>
+          <do_if value="not player.entity.$casino_data.$ResultBanner?">
+            <set_value name="player.entity.$casino_data.$ResultBanner" exact="'Select bet and press SPIN to play!'"/>
+          </do_if>
+          <do_if value="not player.entity.$casino_data.$TotalSpins?">
+            <set_value name="player.entity.$casino_data.$TotalSpins" exact="0"/>
+          </do_if>
+          <do_if value="not player.entity.$casino_data.$TotalWagered?">
+            <set_value name="player.entity.$casino_data.$TotalWagered" exact="0"/>
+          </do_if>
+          <do_if value="not player.entity.$casino_data.$TotalWon?">
+            <set_value name="player.entity.$casino_data.$TotalWon" exact="0"/>
+          </do_if>
+          <do_if value="not player.entity.$casino_data.$NetProfit?">
+            <set_value name="player.entity.$casino_data.$NetProfit" exact="0"/>
+          </do_if>
+          <do_if value="not player.entity.$casino_data.$JackpotsHit?">
+            <set_value name="player.entity.$casino_data.$JackpotsHit" exact="0"/>
+          </do_if>
+          <do_if value="not player.entity.$casino_data.$DemoMode?">
+            <set_value name="player.entity.$casino_data.$DemoMode" exact="0"/>
+          </do_if>
+        </do_else>
 
         <set_value name="$balanceCr" exact="player.money / 100"/>
         <set_value name="$data" exact="player.entity.$casino_data"/>

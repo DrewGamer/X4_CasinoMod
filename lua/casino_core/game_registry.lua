@@ -227,4 +227,53 @@ function GameRegistry:get_categories()
     return result
 end
 
+--- Migrate legacy savegame casino data to ensure all schema fields are present
+-- @param arg1 GameRegistry instance (if called as method) or casino_data table
+-- @param arg2 casino_data table (if called as method)
+-- @return table migrated casino_data
+function GameRegistry.migrate_casino_data(arg1, arg2)
+    local casino_data = arg1
+    if arg1 == GameRegistry or (type(arg1) == "table" and arg1.games and arg1.order) then
+        casino_data = arg2
+    end
+
+    if type(casino_data) ~= "table" then
+        casino_data = {}
+    end
+
+    local defaults = {
+        CurrentBet = 5000,
+        Reel1 = "[ PROFIT! ]",
+        Reel2 = "[ PROFIT! ]",
+        Reel3 = "[ PROFIT! ]",
+        ResultBanner = "Match 3 symbols for profitsss!",
+        TotalSpins = 0,
+        TotalWagered = 0,
+        TotalWon = 0,
+        NetProfit = 0,
+        JackpotsHit = 0,
+        DemoMode = 0
+    }
+
+    for key, default_val in pairs(defaults) do
+        local dollar_key = "$" .. key
+        local val = casino_data[dollar_key]
+        if val == nil then
+            val = casino_data[key]
+        end
+        if val == nil then
+            val = default_val
+        end
+
+        if casino_data[dollar_key] == nil then
+            casino_data[dollar_key] = val
+        end
+        if casino_data[key] == nil then
+            casino_data[key] = val
+        end
+    end
+
+    return casino_data
+end
+
 return GameRegistry

@@ -182,6 +182,82 @@ function TestGameRegistry:test_get_categories()
     luaunit.assertTrue(set["roulette"])
 end
 
+function TestGameRegistry.test_migrate_casino_data_nil_or_empty()
+    local migrated_nil = GameRegistry.migrate_casino_data(nil)
+    luaunit.assertNotNil(migrated_nil)
+    luaunit.assertEquals(migrated_nil["$CurrentBet"], 5000)
+    luaunit.assertEquals(migrated_nil["$Reel1"], "[ PROFIT! ]")
+    luaunit.assertEquals(migrated_nil["$Reel2"], "[ PROFIT! ]")
+    luaunit.assertEquals(migrated_nil["$Reel3"], "[ PROFIT! ]")
+    luaunit.assertEquals(migrated_nil["$ResultBanner"], "Match 3 symbols for profitsss!")
+    luaunit.assertEquals(migrated_nil["$TotalSpins"], 0)
+    luaunit.assertEquals(migrated_nil["$TotalWagered"], 0)
+    luaunit.assertEquals(migrated_nil["$TotalWon"], 0)
+    luaunit.assertEquals(migrated_nil["$NetProfit"], 0)
+    luaunit.assertEquals(migrated_nil["$JackpotsHit"], 0)
+    luaunit.assertEquals(migrated_nil["$DemoMode"], 0)
+
+    local migrated_empty = GameRegistry.migrate_casino_data({})
+    luaunit.assertEquals(migrated_empty["$CurrentBet"], 5000)
+    luaunit.assertEquals(migrated_empty["$JackpotsHit"], 0)
+end
+
+function TestGameRegistry.test_migrate_casino_data_legacy_missing_jackpots_preserves_existing()
+    local legacy = {
+        ["$CurrentBet"] = 25000,
+        ["$TotalSpins"] = 42,
+        ["$TotalWagered"] = 1050000,
+        ["$TotalWon"] = 800000,
+        ["$NetProfit"] = -250000,
+    }
+
+    local result = GameRegistry.migrate_casino_data(legacy)
+    luaunit.assertEquals(result["$CurrentBet"], 25000, "Existing CurrentBet must be preserved")
+    luaunit.assertEquals(result["$TotalSpins"], 42, "Existing TotalSpins must be preserved")
+    luaunit.assertEquals(result["$TotalWagered"], 1050000, "Existing TotalWagered must be preserved")
+    luaunit.assertEquals(result["$TotalWon"], 800000, "Existing TotalWon must be preserved")
+    luaunit.assertEquals(result["$NetProfit"], -250000, "Existing NetProfit must be preserved")
+    luaunit.assertEquals(result["$JackpotsHit"], 0, "Missing JackpotsHit must default to 0")
+    luaunit.assertEquals(result["$DemoMode"], 0, "Missing DemoMode must default to 0")
+    luaunit.assertEquals(result["$Reel1"], "[ PROFIT! ]", "Missing Reel1 must default to [ PROFIT! ]")
+    luaunit.assertEquals(result["$ResultBanner"], "Match 3 symbols for profitsss!")
+end
+
+function TestGameRegistry.test_migrate_casino_data_preserves_existing_jackpots()
+    local existing = {
+        ["$JackpotsHit"] = 7,
+        ["$TotalSpins"] = 100,
+        ["$DemoMode"] = 1,
+    }
+
+    local result = GameRegistry.migrate_casino_data(existing)
+    luaunit.assertEquals(result["$JackpotsHit"], 7, "Existing JackpotsHit count of 7 must not be overwritten")
+    luaunit.assertEquals(result["$DemoMode"], 1, "Existing DemoMode of 1 must not be overwritten")
+    luaunit.assertEquals(result["$TotalSpins"], 100, "Existing TotalSpins of 100 must not be overwritten")
+    luaunit.assertEquals(result["$TotalWagered"], 0, "Missing TotalWagered must default to 0")
+end
+
+function TestGameRegistry.test_xml_contract_savegame_schema_defense_jackpotshit()
+    local f = io.open("md/CasinoStationCues.xml", "r")
+    luaunit.assertNotNil(f, "md/CasinoStationCues.xml should exist and be readable")
+    local content = f:read("*a")
+    f:close()
+
+    -- 1. Must check not player.entity.$casino_data.$JackpotsHit?
+    luaunit.assertTrue(
+        content:find("not player.entity.$casino_data.$JackpotsHit?", 1, true) ~= nil,
+        "md/CasinoStationCues.xml must defensively check 'not player.entity.$casino_data.$JackpotsHit?'"
+    )
+
+    -- 2. Must guard string construction against missing JackpotsHit in Build_Lobby_Menu
+    local has_guard = (content:find("player.entity.$casino_data.$JackpotsHit?", 1, true) ~= nil)
+        or (content:find("$data.$JackpotsHit?", 1, true) ~= nil)
+    luaunit.assertTrue(
+        has_guard,
+        "md/CasinoStationCues.xml must guard $JackpotsHit in Build_Lobby_Menu or statistics display"
+    )
+end
+
 _G.TestGameRegistry = TestGameRegistry
 
 local runner = luaunit.LuaUnit.new()
