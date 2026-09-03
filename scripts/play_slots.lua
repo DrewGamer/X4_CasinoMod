@@ -17,12 +17,12 @@ local SYMBOL_DISPLAY = {
 }
 
 local WIN_TITLES = {
-    JACKPOT      = "★ ★ ★ TELADI JACKPOT! (50x) ★ ★ ★",
-    MAJOR_WIN    = "♦ ♦ ♦ MAJOR WIN! (20x) ♦ ♦ ♦",
-    MEDIUM_WIN   = "▲ ▲ MEDIUM WIN! (10x) ▲ ▲",
-    ENERGY_BOOST = "⚡ ENERGY BOOST! (5x) ⚡",
-    PAIR_MATCH   = "✓ PAIR MATCH (2x)",
-    LOSS         = "✗ No match. Teladi keeps profitsss."
+    JACKPOT      = "*** TELADI JACKPOT! (50x) ***",
+    MAJOR_WIN    = "=== MAJOR WIN! (20x) ===",
+    MEDIUM_WIN   = "[+] MEDIUM WIN! (10x) [+]",
+    ENERGY_BOOST = "[+] ENERGY BOOST! (5x) [+]",
+    PAIR_MATCH   = "[+] PAIR MATCH (2x)",
+    LOSS         = "[-] No match. Teladi keeps profitsss."
 }
 
 local function format_credits(n)

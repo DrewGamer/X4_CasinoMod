@@ -491,6 +491,43 @@ function TestInteractionEngine.test_dealer_xml_cue_contract_slotactor_and_busy_f
     )
 end
 
+function TestInteractionEngine.test_ascii_typography_sanitization()
+    local files_to_check = {
+        "md/CasinoStationCues.xml",
+        "lua/ui_adapters/slots_menu.lua",
+        "t/0001.xml",
+        "t/0001-l044.xml",
+        "scripts/play_slots.lua"
+    }
+    local non_ascii_count = 0
+    local failure_details = {}
+
+    for _, filepath in ipairs(files_to_check) do
+        local f = io.open(filepath, "rb")
+        luaunit.assertNotNil(f, "File must exist: " .. filepath)
+        local content = f:read("*a")
+        f:close()
+
+        local file_non_ascii = 0
+        for i = 1, #content do
+            local byte = content:byte(i)
+            if byte > 127 then
+                non_ascii_count = non_ascii_count + 1
+                file_non_ascii = file_non_ascii + 1
+            end
+        end
+        if file_non_ascii > 0 then
+            table.insert(failure_details, string.format("%s (%d non-ASCII bytes)", filepath, file_non_ascii))
+        end
+    end
+
+    luaunit.assertEquals(
+        non_ascii_count,
+        0,
+        "Non-ASCII characters detected (causes '?' glyph corruption): " .. table.concat(failure_details, ", ")
+    )
+end
+
 _G.TestInteractionEngine = TestInteractionEngine
 
 local runner = luaunit.LuaUnit.new()

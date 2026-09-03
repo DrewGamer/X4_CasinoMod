@@ -82,7 +82,7 @@ Three-tier decoupled mod architecture centered around the vanilla **Casino** and
 | T8.13 | Slot Actor Direct Hooking & Busy Flag Suppression (`$slot.component.slotactor.{$slot}`, `busy="false"`) | done | xp-developer | T8.12 |
 | T8.14 | Standalone UI Live Widget Update Pipeline (`md.Simple_Menu_API.Update_Widget`) | done | xp-developer | T8.13 |
 | T8.15 | Savegame Schema Defense & Blackboard Null Migration (`not $JackpotsHit?`) | done | xp-developer | T8.12 |
-| T8.16 | ASCII Typography Sanitization (Eliminate `?` glyph rendering artifacts) | pending | xp-developer | T8.14 |
+| T8.16 | ASCII Typography Sanitization (Eliminate `?` glyph rendering artifacts) | done | xp-developer | T8.14 |
 | T8.17 | Regression Verification & Continuous Re-Packaging (`scripts/test.ps1`, `scripts/build.ps1`) | pending | xp-developer | T8.9, T8.13, T8.14, T8.15, T8.16 |
 
 ## 5. Sub-Agent Coordination

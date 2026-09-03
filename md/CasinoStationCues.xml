@@ -518,7 +518,7 @@
           param="table[
             $col = 4,
             $id = 'btn_lobby_play_slots',
-            $text = table[$text = '▶ PLAY NOW', $halign = 'center'],
+            $text = table[$text = '>>> PLAY NOW', $halign = 'center'],
             $onClick = Handle_Casino_Action,
           ]"/>
 
@@ -734,7 +734,7 @@
         <set_value name="$modeNotice" exact="''"/>
         <set_value name="$modeColor" exact="'Color.text_normal'"/>
         <do_if value="$data.$DemoMode == 1">
-          <set_value name="$modeNotice" exact="'★ DEMO MODE / OWNER FREE-PLAY ACTIVE - No Credits Exchanged ★'"/>
+          <set_value name="$modeNotice" exact="'*** DEMO MODE / OWNER FREE-PLAY ACTIVE - No Credits Exchanged ***'"/>
           <set_value name="$modeColor" exact="'Color.chatuser_5'"/>
         </do_if>
         <do_elseif value="player.station.exists and player.station.isplayerowned">
@@ -877,7 +877,7 @@
             $col = 2,
             $id = 'btn_spin',
             $text = table[
-              $text   = '★ ★ ★  SPIN!  ★ ★ ★',
+              $text   = '*** SPIN! ***',
               $color  = 'Color.chatuser_5',
               $halign = 'center',
             ],
@@ -900,7 +900,7 @@
             $col = 1,
             $colSpan = 2,
             $id = 'btn_go_lobby',
-            $text = table[$text = '◀ Casino Game Lobby', $halign = 'center'],
+            $text = table[$text = '&lt;&lt;&lt; Casino Game Lobby', $halign = 'center'],
             $onClick = Handle_Casino_Action,
           ]"/>
         <signal_cue_instantly
@@ -938,7 +938,7 @@
           <set_value name="$modeNotice" exact="''"/>
           <set_value name="$modeColor" exact="'Color.text_normal'"/>
           <do_if value="$data.$DemoMode == 1">
-            <set_value name="$modeNotice" exact="'★ DEMO MODE / OWNER FREE-PLAY ACTIVE - No Credits Exchanged ★'"/>
+            <set_value name="$modeNotice" exact="'*** DEMO MODE / OWNER FREE-PLAY ACTIVE - No Credits Exchanged ***'"/>
             <set_value name="$modeColor" exact="'Color.chatuser_5'"/>
           </do_if>
           <do_elseif value="player.station.exists and player.station.isplayerowned">
@@ -1178,24 +1178,24 @@
             <do_if value="$sym1 == $sym2 and $sym2 == $sym3">
               <do_if value="$sym1 == 'teladi_profit'">
                 <set_value name="$multiplier" exact="50"/>
-                <set_value name="$winTitle" exact="'★ ★ ★ TELADI JACKPOT! (50x) ★ ★ ★'"/>
+                <set_value name="$winTitle" exact="'*** TELADI JACKPOT! (50x) ***'"/>
               </do_if>
               <do_elseif value="$sym1 == 'nividium'">
                 <set_value name="$multiplier" exact="20"/>
-                <set_value name="$winTitle" exact="'♦ ♦ ♦ MAJOR WIN! (20x) ♦ ♦ ♦'"/>
+                <set_value name="$winTitle" exact="'=== MAJOR WIN! (20x) ==='"/>
               </do_elseif>
               <do_elseif value="$sym1 == 'silicon' or $sym1 == 'ore'">
                 <set_value name="$multiplier" exact="10"/>
-                <set_value name="$winTitle" exact="'▲ ▲ MEDIUM WIN! (10x) ▲ ▲'"/>
+                <set_value name="$winTitle" exact="'[+] MEDIUM WIN! (10x) [+]'"/>
               </do_elseif>
               <do_elseif value="$sym1 == 'energy_cells'">
                 <set_value name="$multiplier" exact="5"/>
-                <set_value name="$winTitle" exact="'⚡ ENERGY BOOST! (5x) ⚡'"/>
+                <set_value name="$winTitle" exact="'[+] ENERGY BOOST! (5x) [+]'"/>
               </do_elseif>
             </do_if>
             <do_elseif value="$sym1 == $sym2 or $sym2 == $sym3 or $sym1 == $sym3">
               <set_value name="$multiplier" exact="2"/>
-              <set_value name="$winTitle" exact="'✓ PAIR MATCH! (2x Payout)'"/>
+              <set_value name="$winTitle" exact="'[+] PAIR MATCH! (2x Payout)'"/>
             </do_elseif>
 
             <!-- Handle Payouts and Ledger -->
@@ -1254,7 +1254,7 @@
                 </do_if>
 
                 <do_if value="$isDrained">
-                  <set_value name="$data.$ResultBanner" exact="'★ JACKPOT! Station treasury drained: Received ' + $actualPayoutCr + ' Cr (Station at 0 Cr) ★'"/>
+                  <set_value name="$data.$ResultBanner" exact="'*** JACKPOT! Station treasury drained: Received ' + $actualPayoutCr + ' Cr (Station at 0 Cr) ***'"/>
                 </do_if>
                 <do_else>
                   <set_value name="$data.$ResultBanner" exact="$winTitle + ' Won: ' + $actualPayoutCr + ' Cr!'"/>

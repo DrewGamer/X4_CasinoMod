@@ -101,7 +101,7 @@ function SlotsMenu:spin(seed, station_context)
         self.stats.total_spins = self.stats.total_spins + 1
 
         if round.multiplier >= 50 then
-            self.status_message = string.format("[DEMO] ★ JACKPOT! Simulated win: %d Cr! (50x) ★", round.payout)
+            self.status_message = string.format("[DEMO] *** JACKPOT! Simulated win: %d Cr! (50x) ***", round.payout)
         elseif round.multiplier > 0 then
             self.status_message = string.format(
                 "[DEMO] Win! Simulated win: %d Cr! (%dx)", round.payout, round.multiplier)
@@ -189,18 +189,20 @@ function SlotsMenu:spin(seed, station_context)
 
     -- Update UI status message
     if is_drained then
-        self.status_message = string.format("★ JACKPOT! Station treasury drained: Received %d Cr! (Station at 0 Cr) ★",
-            actual_payout)
+        self.status_message = string.format(
+            "*** JACKPOT! Station treasury drained: Received %d Cr! (Station at 0 Cr) ***",
+            actual_payout
+        )
     elseif round.win_type == "JACKPOT" then
-        self.status_message = string.format("★ JACKPOT! Won %d Cr! (50x) ★", actual_payout)
+        self.status_message = string.format("*** JACKPOT! Won %d Cr! (50x) ***", actual_payout)
     elseif round.win_type == "MAJOR_WIN" then
-        self.status_message = string.format("♦ MAJOR WIN! Won %d Cr! (20x) ♦", actual_payout)
+        self.status_message = string.format("=== MAJOR WIN! Won %d Cr! (20x) ===", actual_payout)
     elseif round.win_type == "MEDIUM_WIN" then
-        self.status_message = string.format("▲ Medium Win! Won %d Cr! (10x) ▲", actual_payout)
+        self.status_message = string.format("[+] Medium Win! Won %d Cr! (10x) [+]", actual_payout)
     elseif round.win_type == "ENERGY_BOOST" then
-        self.status_message = string.format("⚡ Energy Boost! Won %d Cr! (5x) ⚡", actual_payout)
+        self.status_message = string.format("[+] Energy Boost! Won %d Cr! (5x) [+]", actual_payout)
     elseif round.win_type == "PAIR_MATCH" then
-        self.status_message = string.format("✓ Pair Match! Won %d Cr! (2x)", actual_payout)
+        self.status_message = string.format("[+] Pair Match! Won %d Cr! (2x)", actual_payout)
     else
         self.status_message = "No match. Teladi keeps profitsss!"
     end
@@ -271,7 +273,7 @@ function SlotsMenu:get_widget_updates(state)
     local mode_text = ""
     local mode_color = "Color.text_normal"
     if is_demo then
-        mode_text = "★ DEMO MODE / OWNER FREE-PLAY ACTIVE - No Credits Exchanged ★"
+        mode_text = "*** DEMO MODE / OWNER FREE-PLAY ACTIVE - No Credits Exchanged ***"
         mode_color = "Color.chatuser_5"
     elseif state.is_player_owned then
         local station_money = state.station_money

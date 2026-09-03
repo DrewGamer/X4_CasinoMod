@@ -23,11 +23,11 @@
     <!-- Slot Game Strings -->
     <t id="100">Teladi Profit Spinner</t>
     <t id="101">Match 3 symbols across the payline to win profitsss!</t>
-    <t id="102">★ ★ ★ TELADI JACKPOT! (50x) ★ ★ ★</t>
-    <t id="103">♦ ♦ ♦ MAJOR WIN! (20x) ♦ ♦ ♦</t>
-    <t id="104">▲ ▲ MEDIUM WIN! (10x) ▲ ▲</t>
-    <t id="105">⚡ ENERGY BOOST! (5x) ⚡</t>
-    <t id="106">✓ PAIR MATCH! (2x Payout)</t>
+    <t id="102">*** TELADI JACKPOT! (50x) ***</t>
+    <t id="103">=== MAJOR WIN! (20x) ===</t>
+    <t id="104">[+] MEDIUM WIN! (10x) [+]</t>
+    <t id="105">[+] ENERGY BOOST! (5x) [+]</t>
+    <t id="106">[+] PAIR MATCH! (2x Payout)</t>
     <t id="107">No match. Better luck next spin!</t>
     <t id="108">Station treasury drained! Paid remaining balance down to 0 Cr.</t>
   </page>
